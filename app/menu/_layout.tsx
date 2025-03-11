@@ -43,10 +43,11 @@ export default function MenuLayout() {
               iconName = focused ? "person-circle" : "person-circle-outline";
             }
 
-            return <Ionicons name={iconName} size={size} color={color} />;
+            return <Ionicons name={iconName} size={30} color={color} />;
           },
           tabBarActiveTintColor: "tomato",
           tabBarInactiveTintColor: "gray",
+          tabBarStyle: { height: 120 },
         })}
       >
         <Tab.Screen name="play" component={Play} options={{ title: "Play" }} />
