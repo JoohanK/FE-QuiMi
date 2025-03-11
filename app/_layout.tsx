@@ -1,39 +1,37 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
-import 'react-native-reanimated';
-
-import { useColorScheme } from '@/hooks/useColorScheme';
-
-// Prevent the splash screen from auto-hiding before asset loading is complete.
-SplashScreen.preventAutoHideAsync();
+import { Slot } from "expo-router";
+import { AuthProvider, AuthContext } from "../context/AuthContext";
+import KeyboardDismissWrapper from "../components/KeyboardDismissWrapper";
+import { StatusBar, Appearance } from "react-native";
+import { auth } from "../firebaseConfig";
+import { signOut, onAuthStateChanged } from "firebase/auth";
+import React, { useEffect, useContext } from "react";
+import { useRouter } from "expo-router";
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
-  const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-  });
+  StatusBar.setBarStyle("dark-content"); // Force light content
+  Appearance.setColorScheme("light"); // Force dark mode (optional)
+
+  const { user, setUser } = useContext(AuthContext);
+  const router = useRouter();
 
   useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [loaded]);
+    const unsubscribe = onAuthStateChanged(auth, (authUser) => {
+      setUser(authUser);
+      if (!authUser) {
+        router.replace("/login");
+      } else {
+        router.replace("/menu/play");
+      }
+    });
 
-  if (!loaded) {
-    return null;
-  }
+    return unsubscribe;
+  }, []);
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    <AuthProvider>
+      <KeyboardDismissWrapper>
+        <Slot />
+      </KeyboardDismissWrapper>
+    </AuthProvider>
   );
 }
