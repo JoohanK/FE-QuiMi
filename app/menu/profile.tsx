@@ -18,6 +18,9 @@ import ContainerComponent from "../../components/ContainerComponent";
 import InputComponent from "@/components/InputComponent";
 import TitleComponent from "@/components/TitleComponent";
 import EmojiPicker from "@/components/EmojiPicker";
+import ProfileEmoji from "@/components/ProfileEmoji";
+import DisplayNameComponent from "@/components/DisplayNameComponent";
+import FlexRowContainer from "@/components/FlexRowContainer";
 
 export default function Profile() {
   const { user, setUser } = useContext(AuthContext);
@@ -75,7 +78,7 @@ export default function Profile() {
 
         setUser(updatedUser);
 
-        alert("Display name updated!");
+        alert("Profile successfully updated");
       }
     } catch (error) {
       console.error("Error updating display name:", error);
@@ -99,27 +102,35 @@ export default function Profile() {
 
   return (
     <>
+      <FlexRowContainer>
+        <ProfileEmoji />
+        <DisplayNameComponent />
+      </FlexRowContainer>
       <ContainerComponent>
-        <TitleComponent>Profile page</TitleComponent>
+        <TitleComponent>Customize profile</TitleComponent>
         {errorMessage ? (
           <Text style={{ color: "red" }}>{errorMessage}</Text>
         ) : null}
-        <Text>Change your display name</Text>
+        <Text>Choose your display name</Text>
         <InputComponent
           placeholder="Name"
           value={displayName}
           onChangeText={setDisplayName}
         />
+        <Text>Choose your Emoji</Text>
         <EmojiPicker onEmojiSelected={handleEmojiSelected} />
         {selectedEmoji && <Text style={{ fontSize: 70 }}>{selectedEmoji}</Text>}
+      </ContainerComponent>
+      <FlexRowContainer>
         {loading ? (
           <ActivityIndicator size="large" />
         ) : (
-          <ButtonComponent title="Save" onPress={handleSave} />
+          <>
+            <ButtonComponent title="Save" onPress={handleSave} />
+            <ButtonComponent title="Sign out" onPress={handleSignOut} />
+          </>
         )}
-        <Text>Signed in as: {user?.email || "Guest"}</Text>
-        <ButtonComponent title="Sign out" onPress={handleSignOut} />
-      </ContainerComponent>
+      </FlexRowContainer>
     </>
   );
 }
