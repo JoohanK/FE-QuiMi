@@ -6,6 +6,7 @@ import { auth } from "../firebaseConfig";
 import { signOut, onAuthStateChanged } from "firebase/auth";
 import React, { useEffect, useContext } from "react";
 import { useRouter } from "expo-router";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 export default function RootLayout() {
   StatusBar.setBarStyle("dark-content"); // Force light content
@@ -18,9 +19,9 @@ export default function RootLayout() {
     const unsubscribe = onAuthStateChanged(auth, (authUser) => {
       setUser(authUser);
       if (!authUser) {
-        router.replace("/login");
+        router.replace("/Login");
       } else {
-        router.replace("/menu/play");
+        router.replace("/menu/Play");
       }
     });
 
@@ -28,10 +29,12 @@ export default function RootLayout() {
   }, []);
 
   return (
-    <AuthProvider>
-      <KeyboardDismissWrapper>
-        <Slot />
-      </KeyboardDismissWrapper>
-    </AuthProvider>
+    <GestureHandlerRootView>
+      <AuthProvider>
+        <KeyboardDismissWrapper>
+          <Slot />
+        </KeyboardDismissWrapper>
+      </AuthProvider>
+    </GestureHandlerRootView>
   );
 }
