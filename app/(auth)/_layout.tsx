@@ -2,9 +2,9 @@ import React, { useContext } from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { AuthContext } from "../../context/AuthContext";
 import { Redirect } from "expo-router";
-import Login from "./login";
-import Register from "./register";
-import ResetPassword from "./resetPassword";
+import Login from "./Login";
+import Register from "./Register";
+import ResetPassword from "./ResetPassword";
 import { Ionicons } from "@expo/vector-icons";
 import HeaderComponent from "../../components/HeaderComponent";
 import { SafeAreaView } from "react-native"; // Import SafeAreaView

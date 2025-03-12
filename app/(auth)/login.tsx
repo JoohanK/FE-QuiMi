@@ -133,7 +133,7 @@ export default function Login() {
       /> */}
       <ButtonComponent
         title="Forgot password?"
-        onPress={() => router.push("/(auth)/resetPassword")}
+        onPress={() => router.push("/(auth)/ResetPassword")}
       />
     </ContainerComponent>
   );

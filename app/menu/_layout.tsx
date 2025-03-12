@@ -3,9 +3,9 @@ import { Slot, Redirect } from "expo-router";
 import { AuthContext } from "../../context/AuthContext";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
-import Play from "./play";
-import Friends from "./friends";
-import Profile from "./profile";
+import Play from "./Play";
+import Friends from "./Friends";
+import Profile from "./Profile";
 import HeaderComponent from "../../components/HeaderComponent";
 
 const Tab = createBottomTabNavigator();
@@ -23,7 +23,7 @@ export default function MenuLayout() {
   const { user } = useContext(AuthContext);
 
   if (!user) {
-    return <Redirect href="/(auth)/login" />;
+    return <Redirect href="/(auth)/Login" />;
   }
 
   return (

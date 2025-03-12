@@ -57,7 +57,7 @@ export default function Register() {
       <ButtonComponent title="Register" onPress={handleSubmit} />
       <ButtonComponent
         title="Already have an account? Sign in"
-        onPress={() => router.push("/login")}
+        onPress={() => router.push("/Login")}
       />
     </ContainerComponent>
   );

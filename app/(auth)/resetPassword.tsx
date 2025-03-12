@@ -21,7 +21,7 @@ export default function ResetPassword() {
         "Email sent",
         "Instructions to reset your password has been sent to your email address."
       );
-      router.push("/login");
+      router.push("/Login");
     }
   };
 
@@ -34,7 +34,7 @@ export default function ResetPassword() {
         onChangeText={setEmail}
       />
       <ButtonComponent title="Reset password" onPress={handleResetPassword} />
-      <ButtonComponent title="Sign in" onPress={() => router.push("/login")} />
+      <ButtonComponent title="Sign in" onPress={() => router.push("/Login")} />
     </ContainerComponent>
   );
 }
