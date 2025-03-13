@@ -142,7 +142,7 @@ const FriendList = () => {
 const styles = StyleSheet.create({
   itemContainer: {
     flexDirection: "row",
-    width: Dimensions.get("window").width * 0.8,
+    minWidth: Dimensions.get("window").width * 0.7,
     justifyContent: "space-between",
     padding: 10,
     borderBottomWidth: 1,
