@@ -7,10 +7,13 @@ import ContainerComponent from "../../components/ContainerComponent";
 import InputComponent from "../../components/InputComponent";
 import ButtonComponent from "../../components/ButtonComponent";
 import TitleComponent from "../../components/TitleComponent";
+import { RootTabParamList } from "@/types/types";
+import { useNavigation, NavigationProp } from "@react-navigation/native";
 
 export default function ResetPassword() {
   const [email, setEmail] = useState("");
   const router = useRouter();
+  const navigation = useNavigation<NavigationProp<RootTabParamList>>();
 
   const handleResetPassword = () => {
     if (!email) {
@@ -34,7 +37,6 @@ export default function ResetPassword() {
         onChangeText={setEmail}
       />
       <ButtonComponent title="Reset password" onPress={handleResetPassword} />
-      <ButtonComponent title="Sign in" onPress={() => router.push("/Login")} />
     </ContainerComponent>
   );
 }

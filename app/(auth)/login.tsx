@@ -8,61 +8,17 @@ import ContainerComponent from "../../components/ContainerComponent";
 import InputComponent from "../../components/InputComponent";
 import ButtonComponent from "../../components/ButtonComponent";
 import TitleComponent from "../../components/TitleComponent";
+import { useNavigation, NavigationProp } from "@react-navigation/native";
+import { RootTabParamList } from "@/types/types";
+
+// Definiera typen för dina rutt
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const router = useRouter();
   const { setUser } = useContext(AuthContext);
-
-  /*   const discovery = AuthSession.useAutoDiscovery("https://accounts.google.com"); */
-
-  /* const [request, response, promptAsync] = AuthSession.useAuthRequest(
-    {
-      clientId:
-        Platform.OS === "web"
-          ? "225607921317-h0rskonvg8qnqu11n82lmthcr7kjamp6.apps.googleusercontent.com"
-          : "225607921317-baq61cd6n4r0iqn41jaati6ij860dvsq.apps.googleusercontent.com",
-      scopes: ["profile", "email"],
-      redirectUri: AuthSession.makeRedirectUri({ scheme: "com.johank.quimi" }), // Use your app scheme
-    },
-    discovery
-  ); */
-
-  /* useEffect(() => {
-    const handleResponse = async () => {
-      if (response?.type === "success") {
-        const { id_token } = response.params;
-        const credential = GoogleAuthProvider.credential(id_token);
-        try {
-          const userCredential = await signInWithCredential(auth, credential);
-          const user = userCredential.user;
-
-          // Check if user exists in Firestore
-          const userDocRef = doc(db, "users", user.uid);
-          const userDoc = await getDoc(userDocRef);
-
-          if (!userDoc.exists()) {
-            await setDoc(userDocRef, {
-              username: user.displayName || user.email,
-              email: user.email,
-              profilePicture: user.photoURL || "",
-              createdAt: new Date(),
-            });
-            alert("New user registered with Google: " + user.email);
-          } else {
-            alert("User signed in with Google: " + user.email);
-          }
-
-          setUser(user);
-        } catch (error) {
-          console.error("Google login error:", error);
-          alert(error);
-        }
-      }
-    };
-    handleResponse();
-  }, [response]); */
+  const navigation = useNavigation<NavigationProp<RootTabParamList>>(); // Typa navigation
 
   const handleSubmit = async () => {
     try {
@@ -77,39 +33,6 @@ export default function Login() {
       alert(error);
     }
   };
-
-  /* const handleGoogleLogin = async () => {
-    if (Platform.OS === "web") {
-      try {
-        const googleProvider = new GoogleAuthProvider();
-        const userCredential = await signInWithPopup(auth, googleProvider);
-        const user = userCredential.user;
-
-        const userDocRef = doc(db, "users", user.uid);
-        const userDoc = await getDoc(userDocRef);
-
-        if (!userDoc.exists()) {
-          await setDoc(userDocRef, {
-            username: user.displayName || user.email,
-            email: user.email,
-            profilePicture: user.photoURL || "",
-            createdAt: new Date(),
-          });
-          alert("New user registered with Google: " + user.email);
-        } else {
-          alert("User signed in with Google: " + user.email);
-        }
-
-        setUser(user);
-        console.log(user.displayName);
-      } catch (error) {
-        console.error("Google login error:", error);
-        alert(error);
-      }
-    } else {
-      promptAsync();
-    }
-  }; */
 
   return (
     <ContainerComponent>
@@ -126,14 +49,12 @@ export default function Login() {
         onChangeText={setPassword}
       />
       <ButtonComponent title="Sign in" onPress={handleSubmit} />
-      {/* <Button
-        disabled={Platform.OS !== "web" && !request}
-        title="Sign in with Google"
-        onPress={handleGoogleLogin}
-      /> */}
+
       <ButtonComponent
         title="Forgot password?"
-        onPress={() => router.push("/(auth)/ResetPassword")}
+        onPress={() => {
+          navigation.navigate("resetPassword");
+        }}
       />
     </ContainerComponent>
   );

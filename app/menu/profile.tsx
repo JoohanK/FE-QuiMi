@@ -28,7 +28,9 @@ export default function Profile() {
   const [displayName, setDisplayName] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  const [selectedEmoji, setSelectedEmoji] = useState<string | null>(null);
+  const [selectedEmoji, setSelectedEmoji] = useState<string | null>(
+    user?.photoURL || null // Korrigera initialt värde här
+  );
 
   useEffect(() => {
     if (user) {

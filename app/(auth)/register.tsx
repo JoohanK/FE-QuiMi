@@ -9,12 +9,15 @@ import ContainerComponent from "../../components/ContainerComponent";
 import InputComponent from "../../components/InputComponent";
 import ButtonComponent from "../../components/ButtonComponent";
 import TitleComponent from "../../components/TitleComponent";
+import { RootTabParamList } from "@/types/types";
+import { useNavigation, NavigationProp } from "@react-navigation/native";
 
 export default function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const router = useRouter();
   const { setUser } = useContext(AuthContext);
+  const navigation = useNavigation<NavigationProp<RootTabParamList>>();
 
   const handleSubmit = async () => {
     try {
@@ -57,7 +60,7 @@ export default function Register() {
       <ButtonComponent title="Register" onPress={handleSubmit} />
       <ButtonComponent
         title="Already have an account? Sign in"
-        onPress={() => router.push("/Login")}
+        onPress={() => navigation.navigate("login")}
       />
     </ContainerComponent>
   );

@@ -18,6 +18,8 @@ import {
 } from "firebase/firestore";
 import { auth, db } from "../firebaseConfig";
 import { profileFromId, UserProfile } from "@/utils/profileFromId";
+import TitleComponent from "./TitleComponent";
+import ContainerComponent from "./ContainerComponent";
 
 interface FriendRequest {
   id: string;
@@ -32,6 +34,7 @@ const FriendRequests = () => {
   const [profiles, setProfiles] = useState<{ [userId: string]: UserProfile }>(
     {}
   );
+  const [loading, setLoading] = useState(true); // Added loading state
 
   useEffect(() => {
     const friendRequestsRef = collection(db, "friends");
@@ -63,6 +66,7 @@ const FriendRequests = () => {
 
       setFriendRequests(requests);
       setProfiles(profilesMap);
+      setLoading(false); // Set loading to false once data is loaded
     });
 
     return () => unsubscribe();
@@ -86,8 +90,17 @@ const FriendRequests = () => {
     }
   };
 
+  if (loading) {
+    return <Text>Loading...</Text>; // Or a loading indicator
+  }
+
+  if (friendRequests.length === 0) {
+    return null; // Don't render anything if there are no requests
+  }
+
   return (
-    <View>
+    <ContainerComponent>
+      <TitleComponent>New Friend Requests</TitleComponent>
       <FlatList
         style={styles.container}
         data={friendRequests}
@@ -102,33 +115,22 @@ const FriendRequests = () => {
               </Text>
             </View>
             <View style={styles.buttonContainer}>
-              <Button
-                title="Accept"
-                onPress={() => acceptFriendRequest(item.id)}
-              />
-              <Button
-                title="Reject"
-                onPress={() => rejectFriendRequest(item.id)}
-              />
+              <Button title="✅" onPress={() => acceptFriendRequest(item.id)} />
+              <Button title="❌" onPress={() => rejectFriendRequest(item.id)} />
             </View>
           </View>
         )}
         keyExtractor={(item) => item.id}
       />
-    </View>
+    </ContainerComponent>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    maxHeight: 150,
-    borderWidth: 1,
-    width: Dimensions.get("window").width * 0.9,
-    marginBottom: 15,
-  },
+  container: {},
   itemContainer: {
     flexDirection: "row",
+    minWidth: Dimensions.get("window").width * 0.7,
     alignItems: "center",
     justifyContent: "space-between",
     padding: 10,
