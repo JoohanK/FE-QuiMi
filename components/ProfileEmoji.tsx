@@ -2,7 +2,6 @@
 import React, { useContext } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { AuthContext } from "../context/AuthContext";
-import { SAMLAuthProvider } from "firebase/auth";
 
 interface ProfileDisplayProps {
   size?: number;
@@ -40,7 +39,7 @@ const styles = StyleSheet.create({
     backgroundColor: "black",
   },
   emoji: {
-    fontSize: 90, // Justera storleken på emojin
+    fontSize: 90,
   },
   placeholder: {
     width: "100%",

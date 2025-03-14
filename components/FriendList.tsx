@@ -78,11 +78,11 @@ const FriendList = () => {
         friendProfilesPromises
       );
       // Ta bort dubbletter baserat på id (om samma vän skulle dyka upp i båda querys)
-      const uniqueFriends = resolvedFriendsWithProfiles.filter(
+      /*   const uniqueFriends = resolvedFriendsWithProfiles.filter(
         (friend, index, self) =>
           index === self.findIndex((f) => f.id === friend.id)
-      );
-      setFriendsWithProfiles(uniqueFriends);
+      ); */
+      setFriendsWithProfiles(resolvedFriendsWithProfiles);
     };
 
     const processSnapshotQ1 = (querySnapshot: any) => {
