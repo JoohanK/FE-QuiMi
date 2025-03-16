@@ -94,7 +94,6 @@ export default function Profile() {
     try {
       await signOut(auth);
       setUser(null);
-      router.replace("/(auth)/Login");
     } catch (error) {
       console.error("Error signing out:", error);
     }

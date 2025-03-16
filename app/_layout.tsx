@@ -3,25 +3,27 @@ import { AuthProvider, AuthContext } from "../context/AuthContext";
 import KeyboardDismissWrapper from "../components/KeyboardDismissWrapper";
 import { StatusBar, Appearance } from "react-native";
 import { auth } from "../firebaseConfig";
-import { signOut, onAuthStateChanged } from "firebase/auth";
-import React, { useEffect, useContext } from "react";
+import { onAuthStateChanged } from "firebase/auth";
+import React, { useEffect, useContext, useState } from "react";
 import { useRouter } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 export default function RootLayout() {
-  StatusBar.setBarStyle("dark-content"); // Force light content
-  Appearance.setColorScheme("light"); // Force dark mode (optional)
+  StatusBar.setBarStyle("dark-content");
+  Appearance.setColorScheme("light");
 
-  const { user, setUser } = useContext(AuthContext);
+  const { setUser } = useContext(AuthContext);
   const router = useRouter();
+  const [initialNavigationDone, setInitialNavigationDone] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (authUser) => {
       setUser(authUser);
       if (!authUser) {
-        router.replace("/Login");
-      } else {
-        router.replace("/menu/Play");
+        router.replace("/login");
+      } else if (!initialNavigationDone) {
+        router.replace("/menu/play");
+        setInitialNavigationDone(true);
       }
     });
 

@@ -24,7 +24,7 @@ export default function ResetPassword() {
         "Email sent",
         "Instructions to reset your password has been sent to your email address."
       );
-      router.push("/Login");
+      router.push("/login");
     }
   };
 

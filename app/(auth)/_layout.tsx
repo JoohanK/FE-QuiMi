@@ -2,9 +2,9 @@ import React, { useContext } from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { AuthContext } from "../../context/AuthContext";
 import { Redirect } from "expo-router";
-import Login from "./Login";
-import Register from "./Register";
-import ResetPassword from "./ResetPassword";
+import Login from "./login";
+import Register from "./register";
+import ResetPassword from "./reset-password";
 import { Ionicons } from "@expo/vector-icons";
 import HeaderComponent from "../../components/HeaderComponent";
 import { SafeAreaView } from "react-native"; // Import SafeAreaView
@@ -21,12 +21,6 @@ type IoniconsName =
   | "help-circle-outline";
 
 export default function Layout() {
-  const { user } = useContext(AuthContext);
-
-  if (user) {
-    return <Redirect href="/" />;
-  }
-
   return (
     <>
       <HeaderComponent title="QuiMi" />

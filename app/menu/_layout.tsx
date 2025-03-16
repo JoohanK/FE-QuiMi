@@ -1,13 +1,14 @@
-import React, { useContext } from "react";
-import { Slot, Redirect } from "expo-router";
+import React, { useContext, useEffect } from "react";
+import { Slot, useRouter } from "expo-router";
 import { AuthContext } from "../../context/AuthContext";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
-import Play from "./Play";
-import Friends from "./Friends";
-import Profile from "./Profile";
+import Play from "./play";
+import Friends from "./friends";
+import Profile from "./profile";
 import HeaderComponent from "../../components/HeaderComponent";
-import AddFriend from "./AddFriend";
+import AddFriend from "./add-friend";
+import { View } from "react-native";
 
 const Tab = createBottomTabNavigator();
 
@@ -24,10 +25,13 @@ type IoniconsName =
 
 export default function MenuLayout() {
   const { user } = useContext(AuthContext);
+  const router = useRouter();
 
-  if (!user) {
-    return <Redirect href="/(auth)/Login" />;
-  }
+  useEffect(() => {
+    if (!user) {
+      router.replace("/login");
+    }
+  }, [user]);
 
   return (
     <>
@@ -61,12 +65,12 @@ export default function MenuLayout() {
           component={Friends}
           options={{ title: "Friends" }}
         />
-        <Tab.Screen // Byt plats på Profile och AddFriend
+        <Tab.Screen
           name="addFriends"
           component={AddFriend}
           options={{ title: "Add Friends" }}
         />
-        <Tab.Screen // Byt plats på Profile och AddFriend
+        <Tab.Screen
           name="profile"
           component={Profile}
           options={{ title: "Profile" }}
