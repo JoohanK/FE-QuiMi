@@ -22,13 +22,13 @@ export default function Play() {
 
   const handleSolo = () => {
     console.log("Move to Match page");
-    router.push("/match/match?mode=solo");
+    router.push("/game/match?mode=solo");
     toggleModal();
   };
 
   const handleChallenge = () => {
     console.log("Move to Match page");
-    router.push("/match/match?mode=challenge");
+    router.push("/game/match?mode=challenge");
     toggleModal();
   };
 

@@ -19,9 +19,10 @@ export default function Match() {
   return (
     <>
       <BackButton onPress={onPress}></BackButton>
-
-      <Text>Match Screen</Text>
-      <Text>Mode: {mode}</Text>
+      <ContainerComponent>
+        <Text>Match Screen</Text>
+        <Text>Mode: {mode}</Text>
+      </ContainerComponent>
     </>
   );
 }
