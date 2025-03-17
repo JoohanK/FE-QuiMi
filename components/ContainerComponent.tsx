@@ -17,26 +17,7 @@ interface ContainerComponentProps {
 const ContainerComponent: React.FC<ContainerComponentProps> = ({
   children,
   style,
-  scrollable,
-  scrollProps,
 }) => {
-  if (scrollable) {
-    return (
-      <ScrollView
-        style={[styles.container, style]}
-        contentContainerStyle={{
-          flexGrow: 1,
-          justifyContent: "center",
-          alignItems: "center",
-          padding: 20,
-        }}
-        {...scrollProps}
-      >
-        {children}
-      </ScrollView>
-    );
-  }
-
   return <View style={[styles.container, style]}>{children}</View>;
 };
 

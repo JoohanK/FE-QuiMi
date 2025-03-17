@@ -1,18 +1,16 @@
 import React from "react";
 import { View, StyleSheet } from "react-native";
-import { Slot } from "expo-router";
+import { Slot, useRouter } from "expo-router";
+import ContainerComponent from "@/components/ContainerComponent";
+import HeaderComponent from "@/components/HeaderComponent";
+import BackButton from "@/components/BackButton";
 
 export default function MatchLayout() {
   return (
-    <View style={styles.container}>
+    <>
+      <HeaderComponent title="Match"></HeaderComponent>
+
       <Slot />
-    </View>
+    </>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#f0f0f0", // Enkel bakgrundsfärg
-  },
-});

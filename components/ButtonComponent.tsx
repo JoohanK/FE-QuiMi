@@ -6,6 +6,7 @@ import {
   ViewStyle,
   TextStyle,
 } from "react-native";
+import ContainerComponent from "./ContainerComponent";
 
 interface ButtonComponentProps {
   title: string;

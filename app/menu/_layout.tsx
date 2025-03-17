@@ -7,6 +7,7 @@ import Play from "./play";
 import Friends from "./friends";
 import Profile from "./profile";
 import HeaderComponent from "../../components/HeaderComponent";
+import ContainerComponent from "@/components/ContainerComponent";
 import AddFriend from "./add-friend";
 import { View } from "react-native";
 
