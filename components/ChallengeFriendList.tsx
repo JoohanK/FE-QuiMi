@@ -15,9 +15,11 @@ import {
   onSnapshot,
   doc,
   deleteDoc,
+  addDoc,
 } from "firebase/firestore";
 import { auth, db } from "../firebaseConfig";
 import { profileFromId, UserProfile } from "@/utils/profileFromId";
+import { useRouter } from "expo-router";
 import TitleComponent from "./TitleComponent";
 import ContainerComponent from "./ContainerComponent";
 
@@ -32,20 +34,11 @@ interface FriendWithProfile extends Friend {
   profile: UserProfile | null;
 }
 
-const FriendList = () => {
+const ChallengeFriendList = () => {
   const [friendsWithProfiles, setFriendsWithProfiles] = useState<
     FriendWithProfile[]
   >([]);
-
-  const deleteFriend = async (friendId: string) => {
-    try {
-      const friendDocRef = doc(db, "friends", friendId);
-      await deleteDoc(friendDocRef);
-      alert("deleted friend");
-    } catch (error) {
-      console.error("Error deleting friend:", error);
-    }
-  };
+  const router = useRouter();
 
   useEffect(() => {
     const friendsRef = collection(db, "friends");
@@ -110,12 +103,42 @@ const FriendList = () => {
     };
   }, []);
 
+  const handleChallengeFriend = async (friend: FriendWithProfile) => {
+    console.log("Friend pressed", friend);
+    try {
+      if (!auth.currentUser) {
+        console.error("User not authenticated");
+        return;
+      }
+      const gamesRef = collection(db, "games");
+
+      const newGame = {
+        player1Id: auth.currentUser.uid,
+        player2Id: friend.id,
+        rounds: [],
+        player1Score: 0,
+        player2Score: 0,
+        matchStatus: "in progress",
+        createdAt: new Date(),
+      };
+      const newGameDoc = await addDoc(gamesRef, newGame);
+
+      console.log("Game created with ID:", newGameDoc.id);
+      router.push(`/match/${newGameDoc.id}`);
+    } catch (error) {
+      console.error("Error creating game:", error);
+    }
+  };
+
   return (
     <ContainerComponent>
       <FlatList
         data={friendsWithProfiles}
         renderItem={({ item }) => (
-          <View style={styles.itemContainer}>
+          <Pressable
+            onPress={() => handleChallengeFriend(item)}
+            style={styles.itemContainer}
+          >
             <View style={styles.profileContainer}>
               <Text style={styles.profileEmoji}>
                 {item.profile?.photoURL || ""}
@@ -124,13 +147,8 @@ const FriendList = () => {
                 {item.profile?.displayName || "Loading..."}
               </Text>
             </View>
-            <Pressable
-              style={styles.deleteButton}
-              onPress={() => deleteFriend(item.id)}
-            >
-              <Text style={styles.deleteButtonText}>❌</Text>
-            </Pressable>
-          </View>
+            <Text>VS</Text>
+          </Pressable>
         )}
         keyExtractor={(item) => item.id}
       />
@@ -143,6 +161,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     minWidth: Dimensions.get("window").width * 0.7,
     justifyContent: "space-between",
+    alignItems: "center",
     padding: 10,
     borderBottomWidth: 1,
     borderBottomColor: "#ccc",
@@ -163,4 +182,4 @@ const styles = StyleSheet.create({
   deleteButtonText: {},
 });
 
-export default FriendList;
+export default ChallengeFriendList;
