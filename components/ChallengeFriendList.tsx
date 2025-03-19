@@ -70,11 +70,7 @@ const ChallengeFriendList = () => {
       const resolvedFriendsWithProfiles = await Promise.all(
         friendProfilesPromises
       );
-      // Ta bort dubbletter baserat på id (om samma vän skulle dyka upp i båda querys)
-      /*   const uniqueFriends = resolvedFriendsWithProfiles.filter(
-        (friend, index, self) =>
-          index === self.findIndex((f) => f.id === friend.id)
-      ); */
+
       setFriendsWithProfiles(resolvedFriendsWithProfiles);
     };
 
@@ -112,10 +108,42 @@ const ChallengeFriendList = () => {
       }
       const gamesRef = collection(db, "games");
 
+      // Determine the friend's userId based on who initiated the friendship
+      const friendUserId =
+        friend.userId1 === auth.currentUser.uid
+          ? friend.userId2
+          : friend.userId1;
+
       const newGame = {
         player1Id: auth.currentUser.uid,
-        player2Id: friend.id,
-        rounds: [],
+        player2Id: friendUserId,
+        rounds: [
+          {
+            roundNumber: 1,
+            player1Answers: [],
+            player2Answers: [],
+            categoryId: null,
+          },
+          {
+            roundNumber: 2,
+            player1Answers: [],
+            player2Answers: [],
+            categoryId: null,
+          },
+          {
+            roundNumber: 3,
+            player1Answers: [],
+            player2Answers: [],
+            categoryId: null,
+          },
+          {
+            roundNumber: 4,
+            player1Answers: [],
+            player2Answers: [],
+            categoryId: null,
+          },
+        ],
+        turn: auth.currentUser.uid,
         player1Score: 0,
         player2Score: 0,
         matchStatus: "in progress",

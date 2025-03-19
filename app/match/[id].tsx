@@ -3,25 +3,113 @@ import { View, Text, TouchableOpacity, ActivityIndicator } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import categoriesData from "@/assets/json/categories.json";
 import { db, auth } from "@/firebaseConfig";
-
-import { doc, onSnapshot, updateDoc } from "firebase/firestore";
+import { doc, onSnapshot, updateDoc, getDoc } from "firebase/firestore";
 
 export default function MatchScreen() {
   const { id } = useLocalSearchParams();
+  const [gameData, setGameData] = useState<any>(null);
   const [questions, setQuestions] = useState<any[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [currentRound, setCurrentRound] = useState(0);
   const [category, setCategory] = useState<string | null>(null);
   const [availableCategories, setAvailableCategories] = useState<any[]>([]);
-  const [gameStarted, setGameStarted] = useState(false);
   const [selectingCategory, setSelectingCategory] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [score, setScore] = useState(0);
   const [usedCategories, setUsedCategories] = useState<number[]>([]);
-  const gameId = typeof id === "string" ? id : "";
-  const [game, setGame] = useState<any>(null);
-  const [currentRound, setCurrentRound] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  //Get 4 different unik categories to show the user.
+  const isPlayer1 = auth.currentUser?.uid === gameData?.player1Id;
+  const isMyTurn = auth.currentUser?.uid === gameData?.turn;
+  const isRoundStarter =
+    (currentRound % 2 === 0 && isPlayer1) ||
+    (currentRound % 2 === 1 && !isPlayer1);
+
+  useEffect(() => {
+    if (!id) return;
+
+    const gameRef = doc(db, "games", id as string);
+    const unsubscribe = onSnapshot(
+      gameRef,
+      (snapshot) => {
+        const data = snapshot.data();
+        console.log("Firestore data:", JSON.stringify(data, null, 2));
+        if (data) {
+          setGameData(data);
+          const newCurrentRound = getCurrentRound(data);
+          setCurrentRound(newCurrentRound);
+          const rounds = Array.isArray(data.rounds) ? data.rounds : [];
+          setUsedCategories(
+            rounds.map((r: any) => r?.categoryId).filter(Boolean)
+          );
+
+          const roundData = rounds[newCurrentRound] || {};
+          const hasQuestions = roundData.questions?.length > 0;
+          const p1AnswersLength = roundData.player1Answers?.length || 0;
+          const p2AnswersLength = roundData.player2Answers?.length || 0;
+
+          console.log("useEffect - Before setting questions:", {
+            isMyTurn,
+            hasQuestions,
+            p1AnswersLength,
+            p2AnswersLength,
+            currentQuestionsLength: questions.length,
+          });
+
+          if (isMyTurn) {
+            if (hasQuestions && (p1AnswersLength < 3 || p2AnswersLength < 3)) {
+              if (
+                questions.length === 0 ||
+                JSON.stringify(questions) !==
+                  JSON.stringify(roundData.questions)
+              ) {
+                console.log("useEffect - Setting questions from roundData");
+                setQuestions(roundData.questions || []);
+                const categoryMatch = categoriesData.categories.find(
+                  (cat) => cat.id === roundData.categoryId
+                );
+                setCategory(categoryMatch?.name || null);
+              } else {
+                console.log(
+                  "useEffect - Questions already set, no update needed"
+                );
+              }
+            } else if (isRoundStarter && !roundData.categoryId) {
+              console.log("useEffect - Setting selectingCategory to true");
+              setSelectingCategory(true);
+              setAvailableCategories(getCategories());
+              setQuestions([]);
+              setCurrentQuestionIndex(0);
+            }
+          } else {
+            console.log("useEffect - Not my turn, clearing questions");
+            setQuestions([]);
+            setCurrentQuestionIndex(0);
+            setCategory(null);
+            setSelectingCategory(false);
+          }
+
+          console.log("useEffect - After setting questions:", questions);
+        }
+      },
+      (error) => {
+        console.error("Error fetching game data:", error);
+      }
+    );
+    return () => unsubscribe();
+  }, [id, isMyTurn, isRoundStarter]); // Lägg till isMyTurn och isRoundStarter som beroenden
+
+  const getCurrentRound = (data: any) => {
+    const rounds = Array.isArray(data?.rounds) ? data.rounds : [];
+    if (rounds.length === 0) return 0;
+    const unfinishedRoundIndex = rounds.findIndex(
+      (round: any) =>
+        (round?.player1Answers?.length || 0) < 3 ||
+        (round?.player2Answers?.length || 0) < 3
+    );
+    return unfinishedRoundIndex === -1
+      ? rounds.length - 1
+      : unfinishedRoundIndex;
+  };
+
   const getCategories = () => {
     const categories = categoriesData.categories || [];
     const available = categories.filter(
@@ -33,9 +121,25 @@ export default function MatchScreen() {
   const handleCategorySelection = async (selectedCategory: any) => {
     setCategory(selectedCategory.name);
     setSelectingCategory(false);
-    setGameStarted(true);
-    setUsedCategories([...usedCategories, selectedCategory.id]);
-    await fetchQuestions(selectedCategory.id);
+    const fetchedQuestions = await fetchQuestions(selectedCategory.id);
+    try {
+      const gameRef = doc(db, "games", id as string);
+      const docSnap = await getDoc(gameRef);
+      const currentData = docSnap.data();
+      if (currentData && Array.isArray(currentData.rounds)) {
+        const updatedRounds = [...currentData.rounds];
+        updatedRounds[currentRound] = {
+          ...updatedRounds[currentRound],
+          categoryId: selectedCategory.id,
+          questions: fetchedQuestions,
+        };
+        await updateDoc(gameRef, { rounds: updatedRounds });
+        setQuestions(fetchedQuestions);
+        setCurrentQuestionIndex(0);
+      }
+    } catch (error) {
+      console.error("Error updating category and questions:", error);
+    }
   };
 
   const fetchQuestions = async (categoryId: number) => {
@@ -45,7 +149,6 @@ export default function MatchScreen() {
         `https://opentdb.com/api.php?amount=3&category=${categoryId}&type=multiple`
       );
       const data = await response.json();
-
       if (data.response_code === 0) {
         const formattedQuestions = data.results.map((item: any) => ({
           question: item.question,
@@ -55,16 +158,17 @@ export default function MatchScreen() {
             ...item.incorrect_answers,
           ]),
         }));
-        setQuestions(formattedQuestions);
+        setIsLoading(false);
+        return formattedQuestions;
       } else {
         alert("Failed to fetch questions. Please try again.");
       }
     } catch (error) {
       console.error("Error fetching questions:", error);
-      alert("An error occurred. Please check your internet connection.");
     } finally {
       setIsLoading(false);
     }
+    return [];
   };
 
   const sortAnswers = (answers: string[]) => {
@@ -76,71 +180,140 @@ export default function MatchScreen() {
     });
   };
 
-  const handleAnswer = (selectedAnswer: string) => {
+  const handleAnswer = async (selectedAnswer: string) => {
     const currentQuestion = questions[currentQuestionIndex];
-    if (selectedAnswer === currentQuestion.correctAnswer) {
-      setScore(score + 1);
-      console.log("Right answer!");
+    const isCorrect = selectedAnswer === currentQuestion.correctAnswer;
+    const gameRef = doc(db, "games", id as string);
+    const answersField = isPlayer1 ? "player1Answers" : "player2Answers";
+    const scoreField = isPlayer1 ? "player1Score" : "player2Score";
+
+    try {
+      const docSnap = await getDoc(gameRef);
+      const currentData = docSnap.data();
+      if (currentData && Array.isArray(currentData.rounds)) {
+        const updatedRounds = [...currentData.rounds];
+        const currentAnswers = updatedRounds[currentRound][answersField] || [];
+        updatedRounds[currentRound] = {
+          ...updatedRounds[currentRound],
+          [answersField]: [
+            ...currentAnswers,
+            { answer: selectedAnswer, isCorrect },
+          ],
+        };
+        await updateDoc(gameRef, {
+          rounds: updatedRounds,
+          [scoreField]: currentData[scoreField] + (isCorrect ? 1 : 0),
+        });
+        console.log("Answer saved:", selectedAnswer, "isCorrect:", isCorrect);
+        handleNextQuestion();
+      }
+    } catch (error) {
+      console.error("Error updating answer:", error);
     }
-    handleNextQuestion();
   };
 
-  const handleNextQuestion = () => {
+  const handleNextQuestion = async () => {
+    console.log(
+      "handleNextQuestion called. Current index:",
+      currentQuestionIndex,
+      "Questions length:",
+      questions.length
+    );
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
+      console.log("Next question index set to:", currentQuestionIndex + 1);
     } else {
-      if (currentRound < 4) {
-        alert(`Round ${currentRound} complete! Score: ${score}`);
-        setCurrentRound(currentRound + 1);
-        setGameStarted(false);
-        setQuestions([]);
-        setCurrentQuestionIndex(0);
-        setSelectingCategory(true);
-        setAvailableCategories(getCategories());
-      } else {
-        alert(`Game over! Final score: ${score}`);
-        setGameStarted(false);
-        setQuestions([]);
-        setCurrentQuestionIndex(0);
-        setCurrentRound(1);
-        setScore(0);
-        setUsedCategories([]);
+      const gameRef = doc(db, "games", id as string);
+      const docSnap = await getDoc(gameRef);
+      const currentData = docSnap.data();
+      if (!currentData) return;
+
+      const roundData = currentData.rounds[currentRound] || {};
+      const nextTurn = isRoundStarter ? gameData.player2Id : gameData.player1Id;
+
+      try {
+        if (isRoundStarter) {
+          await updateDoc(gameRef, { turn: nextTurn });
+          setQuestions([]);
+          setCurrentQuestionIndex(0);
+          setCategory(null);
+          console.log("Turn switched to:", nextTurn);
+        } else if (
+          (roundData.player1Answers?.length || 0) === 3 &&
+          (roundData.player2Answers?.length || 0) === 3
+        ) {
+          if (currentRound < 3) {
+            setQuestions([]);
+            setCurrentQuestionIndex(0);
+            setCategory(null);
+            setSelectingCategory(true);
+            setAvailableCategories(getCategories());
+            console.log("Round completed, selecting category for next round");
+          } else {
+            await updateDoc(gameRef, { matchStatus: "completed" });
+            console.log("Match completed");
+          }
+        } else {
+          await updateDoc(gameRef, { turn: nextTurn });
+          setQuestions([]);
+          setCurrentQuestionIndex(0);
+          setCategory(null);
+          console.log("Turn switched to:", nextTurn);
+        }
+      } catch (error) {
+        console.error("Error updating turn:", error);
       }
     }
   };
 
-  const handleStart = () => {
-    setSelectingCategory(true);
-    setAvailableCategories(getCategories());
+  const handleStartRound = () => {
+    if (isRoundStarter && !gameData?.rounds?.[currentRound]?.categoryId) {
+      setSelectingCategory(true);
+      setAvailableCategories(getCategories());
+    }
   };
+
+  if (!gameData) {
+    return <ActivityIndicator size="large" color="blue" />;
+  }
+
+  console.log("Render - questions:", questions);
+  console.log("Render - currentQuestionIndex:", currentQuestionIndex);
+  console.log("Render - isMyTurn:", isMyTurn);
+  console.log("Render - selectingCategory:", selectingCategory);
 
   return (
     <View style={{ padding: 20 }}>
       <Text style={{ fontSize: 20, fontWeight: "bold" }}>Match ID: {id}</Text>
+      <Text>Runda: {currentRound + 1}</Text>
+      <Text>Min tur: {isMyTurn ? "Ja" : "Nej"}</Text>
 
-      {!gameStarted && !selectingCategory && (
-        <TouchableOpacity
-          onPress={handleStart}
-          style={{
-            backgroundColor: "blue",
-            padding: 10,
-            borderRadius: 5,
-            marginTop: 20,
-          }}
-        >
-          <Text style={{ color: "white", textAlign: "center" }}>
-            Start round 1
-          </Text>
-        </TouchableOpacity>
-      )}
+      {questions.length === 0 &&
+        !selectingCategory &&
+        isMyTurn &&
+        !gameData?.rounds?.[currentRound]?.questions?.length && (
+          <TouchableOpacity
+            onPress={handleStartRound}
+            style={{
+              backgroundColor: "blue",
+              padding: 10,
+              borderRadius: 5,
+              marginTop: 20,
+            }}
+          >
+            <Text style={{ color: "white", textAlign: "center" }}>
+              Starta runda {currentRound + 1}
+            </Text>
+          </TouchableOpacity>
+        )}
 
-      {selectingCategory && (
+      {selectingCategory && isMyTurn && isRoundStarter && (
         <View style={{ marginTop: 20 }}>
-          <Text style={{ fontSize: 18 }}>Select a category:</Text>
-          {availableCategories.map((category) => (
+          <Text style={{ fontSize: 18 }}>Välj en kategori:</Text>
+          {availableCategories.map((cat) => (
             <TouchableOpacity
-              key={category.id}
-              onPress={() => handleCategorySelection(category)}
+              key={cat.id}
+              onPress={() => handleCategorySelection(cat)}
               style={{
                 padding: 10,
                 backgroundColor: "lightgray",
@@ -148,7 +321,7 @@ export default function MatchScreen() {
                 borderRadius: 5,
               }}
             >
-              <Text>{category.name}</Text>
+              <Text>{cat.name}</Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -160,17 +333,16 @@ export default function MatchScreen() {
         </View>
       )}
 
-      {gameStarted && questions.length > 0 && (
+      {questions.length > 0 && isMyTurn && !selectingCategory && (
         <View style={{ marginTop: 20 }}>
           <Text style={{ fontSize: 18, fontWeight: "bold" }}>
-            Category: {category}
+            Kategori: {category}
           </Text>
           <Text style={{ fontSize: 16, marginTop: 10 }}>
             {currentQuestionIndex + 1}.{" "}
-            {questions[currentQuestionIndex].question}
+            {questions[currentQuestionIndex]?.question || ""}
           </Text>
-
-          {questions[currentQuestionIndex].allAnswers.map(
+          {questions[currentQuestionIndex]?.allAnswers?.map(
             (answer: string, ansIndex: number) => (
               <TouchableOpacity
                 key={ansIndex}
@@ -187,6 +359,10 @@ export default function MatchScreen() {
             )
           )}
         </View>
+      )}
+
+      {!isMyTurn && (
+        <Text style={{ marginTop: 20 }}>Väntar på motståndaren...</Text>
       )}
     </View>
   );
