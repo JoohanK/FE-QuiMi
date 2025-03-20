@@ -54,7 +54,12 @@ export default function MatchScreen() {
             currentQuestionsLength: questions.length,
           });
 
-          if (isMyTurn) {
+          if (data.matchStatus === "completed") {
+            setQuestions([]);
+            setCurrentQuestionIndex(0);
+            setCategory(null);
+            setSelectingCategory(false);
+          } else if (isMyTurn) {
             if (hasQuestions && (p1AnswersLength < 3 || p2AnswersLength < 3)) {
               if (
                 questions.length === 0 ||
@@ -95,7 +100,7 @@ export default function MatchScreen() {
       }
     );
     return () => unsubscribe();
-  }, [id, isMyTurn, isRoundStarter]); // Lägg till isMyTurn och isRoundStarter som beroenden
+  }, [id, isMyTurn, isRoundStarter]);
 
   const getCurrentRound = (data: any) => {
     const rounds = Array.isArray(data?.rounds) ? data.rounds : [];
@@ -181,32 +186,41 @@ export default function MatchScreen() {
   };
 
   const handleAnswer = async (selectedAnswer: string) => {
+    const gameRef = doc(db, "games", id as string);
+    const docSnap = await getDoc(gameRef);
+    const currentData = docSnap.data();
+    if (!currentData || currentData.matchStatus === "completed") return;
+
+    const roundData = currentData.rounds[currentRound] || {};
+    const currentPlayerAnswers = isPlayer1
+      ? roundData.player1Answers || []
+      : roundData.player2Answers || [];
+
+    // Strikt kontroll: max 3 svar
+    if (currentPlayerAnswers.length >= 3) {
+      console.log("Player has already answered 3 questions, skipping save.");
+      return;
+    }
+
     const currentQuestion = questions[currentQuestionIndex];
     const isCorrect = selectedAnswer === currentQuestion.correctAnswer;
-    const gameRef = doc(db, "games", id as string);
+    const newAnswer = { answer: selectedAnswer, isCorrect };
     const answersField = isPlayer1 ? "player1Answers" : "player2Answers";
     const scoreField = isPlayer1 ? "player1Score" : "player2Score";
 
     try {
-      const docSnap = await getDoc(gameRef);
-      const currentData = docSnap.data();
-      if (currentData && Array.isArray(currentData.rounds)) {
-        const updatedRounds = [...currentData.rounds];
-        const currentAnswers = updatedRounds[currentRound][answersField] || [];
-        updatedRounds[currentRound] = {
-          ...updatedRounds[currentRound],
-          [answersField]: [
-            ...currentAnswers,
-            { answer: selectedAnswer, isCorrect },
-          ],
-        };
-        await updateDoc(gameRef, {
-          rounds: updatedRounds,
-          [scoreField]: currentData[scoreField] + (isCorrect ? 1 : 0),
-        });
-        console.log("Answer saved:", selectedAnswer, "isCorrect:", isCorrect);
-        handleNextQuestion();
-      }
+      const updatedRounds = [...currentData.rounds];
+      const currentAnswers = updatedRounds[currentRound][answersField] || [];
+      updatedRounds[currentRound] = {
+        ...updatedRounds[currentRound],
+        [answersField]: [...currentAnswers, newAnswer],
+      };
+      await updateDoc(gameRef, {
+        rounds: updatedRounds,
+        [scoreField]: currentData[scoreField] + (isCorrect ? 1 : 0),
+      });
+      console.log("Answer saved:", selectedAnswer, "isCorrect:", isCorrect);
+      await handleNextQuestion();
     } catch (error) {
       console.error("Error updating answer:", error);
     }
@@ -229,37 +243,56 @@ export default function MatchScreen() {
       if (!currentData) return;
 
       const roundData = currentData.rounds[currentRound] || {};
-      const nextTurn = isRoundStarter ? gameData.player2Id : gameData.player1Id;
+      const isPlayer1Turn = gameData.turn === gameData.player1Id;
+      const nextRoundStarter =
+        currentRound % 2 === 0 ? gameData.player2Id : gameData.player1Id;
+      const nextTurn = isRoundStarter
+        ? isPlayer1Turn
+          ? gameData.player2Id
+          : gameData.player1Id
+        : nextRoundStarter;
+
+      console.log("Switching turn - isRoundStarter:", isRoundStarter);
+      console.log("Switching turn - Current turn:", gameData.turn);
+      console.log("Switching turn - Next turn:", nextTurn);
 
       try {
         if (isRoundStarter) {
           await updateDoc(gameRef, { turn: nextTurn });
+          console.log("Turn switched to:", nextTurn);
           setQuestions([]);
           setCurrentQuestionIndex(0);
           setCategory(null);
-          console.log("Turn switched to:", nextTurn);
         } else if (
-          (roundData.player1Answers?.length || 0) === 3 &&
-          (roundData.player2Answers?.length || 0) === 3
+          (roundData.player1Answers?.length || 0) >= 3 &&
+          (roundData.player2Answers?.length || 0) >= 3
         ) {
-          if (currentRound < 3) {
+          if (currentRound >= 3) {
+            await updateDoc(gameRef, { matchStatus: "completed" });
+            console.log("Match completed");
+          } else {
             setQuestions([]);
             setCurrentQuestionIndex(0);
             setCategory(null);
             setSelectingCategory(true);
             setAvailableCategories(getCategories());
             console.log("Round completed, selecting category for next round");
-          } else {
-            await updateDoc(gameRef, { matchStatus: "completed" });
-            console.log("Match completed");
+            await updateDoc(gameRef, {
+              turn: nextRoundStarter,
+              currentRound: currentRound + 1,
+            });
           }
         } else {
           await updateDoc(gameRef, { turn: nextTurn });
+          console.log("Turn switched to:", nextTurn);
           setQuestions([]);
           setCurrentQuestionIndex(0);
           setCategory(null);
-          console.log("Turn switched to:", nextTurn);
         }
+
+        const updatedDocSnap = await getDoc(gameRef);
+        const updatedData = updatedDocSnap.data();
+        console.log("Firestore after update - turn:", updatedData?.turn);
       } catch (error) {
         console.error("Error updating turn:", error);
       }
@@ -281,6 +314,47 @@ export default function MatchScreen() {
   console.log("Render - currentQuestionIndex:", currentQuestionIndex);
   console.log("Render - isMyTurn:", isMyTurn);
   console.log("Render - selectingCategory:", selectingCategory);
+
+  // "Game Over"-skärm
+  if (gameData.matchStatus === "completed") {
+    return (
+      <View
+        style={{
+          padding: 20,
+          alignItems: "center",
+          justifyContent: "center",
+          flex: 1,
+        }}
+      >
+        <Text style={{ fontSize: 32, fontWeight: "bold", marginBottom: 20 }}>
+          Game Over!
+        </Text>
+        <Text style={{ fontSize: 20 }}>
+          Player 1 Score: {gameData.player1Score}
+        </Text>
+        <Text style={{ fontSize: 20, marginBottom: 20 }}>
+          Player 2 Score: {gameData.player2Score}
+        </Text>
+        <Text style={{ fontSize: 24, fontWeight: "bold", marginBottom: 20 }}>
+          {gameData.player1Score > gameData.player2Score
+            ? "Player 1 Wins!"
+            : gameData.player2Score > gameData.player1Score
+            ? "Player 2 Wins!"
+            : "It's a Tie!"}
+        </Text>
+        <TouchableOpacity
+          onPress={() => console.log("New game")} // Fungerar i webbläsare, för mobil kan du använda navigation
+          style={{
+            backgroundColor: "blue",
+            padding: 15,
+            borderRadius: 5,
+          }}
+        >
+          <Text style={{ color: "white", fontSize: 18 }}>Play Again</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   return (
     <View style={{ padding: 20 }}>
