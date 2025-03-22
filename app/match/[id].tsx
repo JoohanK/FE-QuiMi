@@ -23,6 +23,13 @@ export default function MatchScreen() {
     (currentRound % 2 === 0 && isPlayer1) ||
     (currentRound % 2 === 1 && !isPlayer1);
 
+  //Hämtar spelets data från Firestore
+  //Uppdaterar state med spelets data
+  //Sätter vilken runda som är den "aktuella" rundan
+  //Sätter vilken fråga som är den "aktuella" frågan
+  //Sätter vilka kategorier som har använts i spelet
+  //Kollar om det är min tur och om jag är den som startar rundan
+  //Kollar om det finns frågor i rundan och om någon spelare inte har svarat på 3 frågor
   useEffect(() => {
     if (!id) return;
 
@@ -60,7 +67,9 @@ export default function MatchScreen() {
             setCategory(null);
             setSelectingCategory(false);
           } else if (isMyTurn) {
+            // Om det är min tur, det finns frågor och någon spelare inte har svarat på 3 frågor, då ska jag se och svara på frågorna från rundan. Alltså rundan är redan igång.
             if (hasQuestions && (p1AnswersLength < 3 || p2AnswersLength < 3)) {
+              // Om det inte finns några frågor i state eller om frågorna i state inte matchar frågorna från rundan, då ska frågorna och kategorin sättas i state.
               if (
                 questions.length === 0 ||
                 JSON.stringify(questions) !==
@@ -77,6 +86,7 @@ export default function MatchScreen() {
                   "useEffect - Questions already set, no update needed"
                 );
               }
+              //Annars starta en ny runda om det är min tur och jag är den som startar rundan och det inte finns en kategori för rundan.
             } else if (isRoundStarter && !roundData.categoryId) {
               console.log("useEffect - Setting selectingCategory to true");
               setSelectingCategory(true);
@@ -102,6 +112,7 @@ export default function MatchScreen() {
     return () => unsubscribe();
   }, [id, isMyTurn, isRoundStarter]);
 
+  // används för att bestämma vilken runda i spelet som är den "aktuella" rundan baserat på spelets data
   const getCurrentRound = (data: any) => {
     const rounds = Array.isArray(data?.rounds) ? data.rounds : [];
     if (rounds.length === 0) return 0;
@@ -115,23 +126,30 @@ export default function MatchScreen() {
       : unfinishedRoundIndex;
   };
 
+  //Hämtar 4 kategorier som inte har använts i spelet från kategorilistan i min assetsmapp
   const getCategories = () => {
     const categories = categoriesData.categories || [];
     const available = categories.filter(
       (cat) => !usedCategories.includes(cat.id)
     );
+    //inte perfekt blandning men duger för min app, en helt korrekt blandning skulle kräva "Fisher-Yates" shuffle
     return [...available].sort(() => 0.5 - Math.random()).slice(0, 4);
   };
 
+  //När man klickar på en kategori så sätter jag den i state och sen hämtar frågor från den kategorin
   const handleCategorySelection = async (selectedCategory: any) => {
     setCategory(selectedCategory.name);
     setSelectingCategory(false);
     const fetchedQuestions = await fetchQuestions(selectedCategory.id);
     try {
+      //Hämtar en snapshot av spelet från Firestore innan jag uppdaterar det
       const gameRef = doc(db, "games", id as string);
       const docSnap = await getDoc(gameRef);
       const currentData = docSnap.data();
+      //Dubbelkollar så att rounds är en array innan jag uppdaterar den
       if (currentData && Array.isArray(currentData.rounds)) {
+        //Skapar en kopia av rounds-arrayen
+        //Uppdaterar den aktuella rundens kategori och frågor
         const updatedRounds = [...currentData.rounds];
         updatedRounds[currentRound] = {
           ...updatedRounds[currentRound],
@@ -155,6 +173,7 @@ export default function MatchScreen() {
       );
       const data = await response.json();
       if (data.response_code === 0) {
+        //mappar igenom svaret från API för att skapa nya object för varje fråga med tre egenskaper: question, correctAnswer och allAnswers
         const formattedQuestions = data.results.map((item: any) => ({
           question: item.question,
           correctAnswer: item.correct_answer,
@@ -176,6 +195,7 @@ export default function MatchScreen() {
     return [];
   };
 
+  //Sorterar svar så att nummer hamnar först och sedan i bokstavsordning
   const sortAnswers = (answers: string[]) => {
     return answers.sort((a, b) => {
       if (!isNaN(Number(a)) && !isNaN(Number(b))) {
@@ -189,8 +209,10 @@ export default function MatchScreen() {
     const gameRef = doc(db, "games", id as string);
     const docSnap = await getDoc(gameRef);
     const currentData = docSnap.data();
+    //Om spelet inte finns eller om matchen är avslutad så return, annars kan man svara på sista frågan oändligt.
     if (!currentData || currentData.matchStatus === "completed") return;
 
+    //Hämta data för aktuell runda och spelares svar
     const roundData = currentData.rounds[currentRound] || {};
     const currentPlayerAnswers = isPlayer1
       ? roundData.player1Answers || []
@@ -203,18 +225,24 @@ export default function MatchScreen() {
     }
 
     const currentQuestion = questions[currentQuestionIndex];
+    //En boolean som indikerar om svaret var rätt (t.ex. true eller false).
     const isCorrect = selectedAnswer === currentQuestion.correctAnswer;
     const newAnswer = { answer: selectedAnswer, isCorrect };
     const answersField = isPlayer1 ? "player1Answers" : "player2Answers";
     const scoreField = isPlayer1 ? "player1Score" : "player2Score";
 
     try {
+      //Skapar en kopia av rounds-arrayen för att sen ändra den och uppdatera den i Firestore
       const updatedRounds = [...currentData.rounds];
       const currentAnswers = updatedRounds[currentRound][answersField] || [];
+      //Uppdaaterar den aktuella rundan
       updatedRounds[currentRound] = {
+        //Behåller alla befintliga egenskaper (t.ex. categoryId, questions)
         ...updatedRounds[currentRound],
+        //Lägger till det nya svaret (newAnswer) i spelarens svarsarray.
         [answersField]: [...currentAnswers, newAnswer],
       };
+      //Uppdaterar spelet med de nya svaren och poängen
       await updateDoc(gameRef, {
         rounds: updatedRounds,
         [scoreField]: currentData[scoreField] + (isCorrect ? 1 : 0),
@@ -226,6 +254,7 @@ export default function MatchScreen() {
     }
   };
 
+  //En asynkron funktion som hanterar övergången till nästa fråga eller nästa runda efter att en spelare har svarat
   const handleNextQuestion = async () => {
     console.log(
       "handleNextQuestion called. Current index:",
@@ -233,20 +262,38 @@ export default function MatchScreen() {
       "Questions length:",
       questions.length
     );
-    if (currentQuestionIndex < questions.length - 1) {
-      setCurrentQuestionIndex(currentQuestionIndex + 1);
-      console.log("Next question index set to:", currentQuestionIndex + 1);
-    } else {
-      const gameRef = doc(db, "games", id as string);
-      const docSnap = await getDoc(gameRef);
-      const currentData = docSnap.data();
-      if (!currentData) return;
 
-      const roundData = currentData.rounds[currentRound] || {};
+    // Hämta aktuell data från Firestore för att alltid ha korrekt tillstånd
+    const gameRef = doc(db, "games", id as string);
+    const docSnap = await getDoc(gameRef);
+    const currentData = docSnap.data();
+    if (!currentData) return;
+
+    const roundData = currentData.rounds[currentRound] || {};
+    const playerAnswers = isPlayer1
+      ? roundData.player1Answers || []
+      : roundData.player2Answers || [];
+
+    // Om det finns fler frågor i rundan så öka index för aktuell fråga
+    if (playerAnswers.length < 3) {
+      if (currentQuestionIndex < questions.length - 1) {
+        setCurrentQuestionIndex(currentQuestionIndex + 1);
+        console.log("Next question index set to:", currentQuestionIndex + 1);
+      } else {
+        console.log("Player finished their questions, waiting for opponent");
+      }
+      return; // Avsluta här, ingen turväxling förrän alla 3 frågor är besvarade
+    } else {
+      // Om det inte finns fler frågor i rundan för spelaren (dvs. 3 svar givna)
+      //Bestäm nästa tur
       const isPlayer1Turn = gameData.turn === gameData.player1Id;
+      //I och med att jag vet att player 1 alltid startar runda med index, 0 och 2, kan jag räkna ut nextRoundStarter
       const nextRoundStarter =
         currentRound % 2 === 0 ? gameData.player2Id : gameData.player1Id;
-      const nextTurn = isRoundStarter
+
+      //OM jag är roundstarter, har gjort mina tre frågor och jag är player 1, byt då till player 2, annars byt till player 1.
+      //Om jag inte är roundstarter och jag gjort mina tre frågor innebär detta att en ny runda skall sättas igång, byt till nextRoundStarter, som kommer vara mig själv
+      const nextTurnId = isRoundStarter
         ? isPlayer1Turn
           ? gameData.player2Id
           : gameData.player1Id
@@ -254,12 +301,17 @@ export default function MatchScreen() {
 
       console.log("Switching turn - isRoundStarter:", isRoundStarter);
       console.log("Switching turn - Current turn:", gameData.turn);
-      console.log("Switching turn - Next turn:", nextTurn);
+      console.log("Switching turn - Next turn:", nextTurnId);
 
       try {
-        if (isRoundStarter) {
-          await updateDoc(gameRef, { turn: nextTurn });
-          console.log("Turn switched to:", nextTurn);
+        const opponentAnswers = isPlayer1
+          ? roundData.player2Answers || []
+          : roundData.player1Answers || [];
+
+        if (isRoundStarter && opponentAnswers.length < 3) {
+          // Rundstartaren har svarat på sina 3 frågor, växla till motståndaren
+          await updateDoc(gameRef, { turn: nextTurnId });
+          console.log("Turn switched to:", nextTurnId);
           setQuestions([]);
           setCurrentQuestionIndex(0);
           setCategory(null);
@@ -267,6 +319,7 @@ export default function MatchScreen() {
           (roundData.player1Answers?.length || 0) >= 3 &&
           (roundData.player2Answers?.length || 0) >= 3
         ) {
+          // Båda spelarna har svarat på 3 frågor
           if (currentRound >= 3) {
             await updateDoc(gameRef, { matchStatus: "completed" });
             console.log("Match completed");
@@ -283,11 +336,8 @@ export default function MatchScreen() {
             });
           }
         } else {
-          await updateDoc(gameRef, { turn: nextTurn });
-          console.log("Turn switched to:", nextTurn);
-          setQuestions([]);
-          setCurrentQuestionIndex(0);
-          setCategory(null);
+          // Motståndaren har svarat på sina 3 frågor, men rundan är inte klar än
+          console.log("Opponent hasn't finished yet, no action taken");
         }
 
         const updatedDocSnap = await getDoc(gameRef);
@@ -383,7 +433,7 @@ export default function MatchScreen() {
 
       {selectingCategory && isMyTurn && isRoundStarter && (
         <View style={{ marginTop: 20 }}>
-          <Text style={{ fontSize: 18 }}>Välj en kategori:</Text>
+          <Text style={{ fontSize: 18 }}>Choose Category:</Text>
           {availableCategories.map((cat) => (
             <TouchableOpacity
               key={cat.id}
