@@ -18,21 +18,11 @@ import {
   addDoc,
 } from "firebase/firestore";
 import { auth, db } from "../firebaseConfig";
-import { profileFromId, UserProfile } from "@/utils/profileFromId";
+import { profileFromId } from "@/utils/profileFromId";
 import { useRouter } from "expo-router";
 import TitleComponent from "./TitleComponent";
 import ContainerComponent from "./ContainerComponent";
-
-interface Friend {
-  id: string;
-  userId1: string;
-  userId2: string;
-  status: "accepted";
-}
-
-interface FriendWithProfile extends Friend {
-  profile: UserProfile | null;
-}
+import { Friend, FriendWithProfile } from "@/types/types";
 
 const ChallengeFriendList = () => {
   const [friendsWithProfiles, setFriendsWithProfiles] = useState<
@@ -187,7 +177,7 @@ const ChallengeFriendList = () => {
 const styles = StyleSheet.create({
   itemContainer: {
     flexDirection: "row",
-    minWidth: Dimensions.get("window").width * 0.7,
+    minWidth: "100%",
     justifyContent: "space-between",
     alignItems: "center",
     padding: 10,

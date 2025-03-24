@@ -1,11 +1,7 @@
 // utils/profileFromId.ts
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../firebaseConfig";
-
-export interface UserProfile {
-  displayName: string;
-  photoURL: string;
-}
+import { UserProfile } from "@/types/types";
 
 export const profileFromId = async (
   userId: string

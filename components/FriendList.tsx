@@ -1,13 +1,6 @@
 // components/FriendList.tsx
 import React, { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  FlatList,
-  StyleSheet,
-  Dimensions,
-  Pressable,
-} from "react-native";
+import { View, Text, FlatList, StyleSheet, Pressable } from "react-native";
 import {
   collection,
   query,
@@ -15,35 +8,89 @@ import {
   onSnapshot,
   doc,
   deleteDoc,
+  addDoc,
 } from "firebase/firestore";
+import { useRouter } from "expo-router";
 import { auth, db } from "../firebaseConfig";
-import { profileFromId, UserProfile } from "@/utils/profileFromId";
+import { profileFromId } from "@/utils/profileFromId";
 import TitleComponent from "./TitleComponent";
 import ContainerComponent from "./ContainerComponent";
-
-interface Friend {
-  id: string;
-  userId1: string;
-  userId2: string;
-  status: "accepted";
-}
-
-interface FriendWithProfile extends Friend {
-  profile: UserProfile | null;
-}
+import { Friend, FriendWithProfile } from "@/types/types";
 
 const FriendList = () => {
   const [friendsWithProfiles, setFriendsWithProfiles] = useState<
     FriendWithProfile[]
   >([]);
+  const router = useRouter();
 
   const deleteFriend = async (friendId: string) => {
     try {
       const friendDocRef = doc(db, "friends", friendId);
       await deleteDoc(friendDocRef);
-      alert("deleted friend");
+      alert("Deleted friend");
     } catch (error) {
       console.error("Error deleting friend:", error);
+    }
+  };
+
+  const handleFriendPress = (friendId: string) => {
+    router.push(`/friend/${friendId}`);
+  };
+
+  const handleChallengeFriend = async (friend: FriendWithProfile) => {
+    try {
+      if (!auth.currentUser) {
+        console.error("User not authenticated");
+        return;
+      }
+      const gamesRef = collection(db, "games");
+
+      const friendUserId =
+        friend.userId1 === auth.currentUser.uid
+          ? friend.userId2
+          : friend.userId1;
+
+      const newGame = {
+        player1Id: auth.currentUser.uid,
+        player2Id: friendUserId,
+        rounds: [
+          {
+            roundNumber: 1,
+            player1Answers: [],
+            player2Answers: [],
+            categoryId: null,
+          },
+          {
+            roundNumber: 2,
+            player1Answers: [],
+            player2Answers: [],
+            categoryId: null,
+          },
+          {
+            roundNumber: 3,
+            player1Answers: [],
+            player2Answers: [],
+            categoryId: null,
+          },
+          {
+            roundNumber: 4,
+            player1Answers: [],
+            player2Answers: [],
+            categoryId: null,
+          },
+        ],
+        turn: auth.currentUser.uid,
+        player1Score: 0,
+        player2Score: 0,
+        matchStatus: "in progress",
+        createdAt: new Date().toISOString(), // Använd ISO-sträng för konsistens
+      };
+      const newGameDoc = await addDoc(gamesRef, newGame);
+
+      console.log("Game created with ID:", newGameDoc.id);
+      router.push(`/match/${newGameDoc.id}`);
+    } catch (error) {
+      console.error("Error creating game:", error);
     }
   };
 
@@ -77,11 +124,6 @@ const FriendList = () => {
       const resolvedFriendsWithProfiles = await Promise.all(
         friendProfilesPromises
       );
-      // Ta bort dubbletter baserat på id (om samma vän skulle dyka upp i båda querys)
-      /*   const uniqueFriends = resolvedFriendsWithProfiles.filter(
-        (friend, index, self) =>
-          index === self.findIndex((f) => f.id === friend.id)
-      ); */
       setFriendsWithProfiles(resolvedFriendsWithProfiles);
     };
 
@@ -115,7 +157,10 @@ const FriendList = () => {
       <FlatList
         data={friendsWithProfiles}
         renderItem={({ item }) => (
-          <View style={styles.itemContainer}>
+          <Pressable
+            onPress={() => handleFriendPress(item.id)}
+            style={styles.itemContainer}
+          >
             <View style={styles.profileContainer}>
               <Text style={styles.profileEmoji}>
                 {item.profile?.photoURL || ""}
@@ -125,12 +170,12 @@ const FriendList = () => {
               </Text>
             </View>
             <Pressable
-              style={styles.deleteButton}
-              onPress={() => deleteFriend(item.id)}
+              style={styles.challengeButton}
+              onPress={() => handleChallengeFriend(item)}
             >
-              <Text style={styles.deleteButtonText}>❌</Text>
+              <Text style={styles.challengeButtonText}>🎮</Text>
             </Pressable>
-          </View>
+          </Pressable>
         )}
         keyExtractor={(item) => item.id}
       />
@@ -141,7 +186,7 @@ const FriendList = () => {
 const styles = StyleSheet.create({
   itemContainer: {
     flexDirection: "row",
-    minWidth: Dimensions.get("window").width * 0.7,
+    minWidth: "100%",
     justifyContent: "space-between",
     padding: 10,
     borderBottomWidth: 1,
@@ -155,12 +200,16 @@ const styles = StyleSheet.create({
     fontSize: 30,
     marginRight: 10,
   },
-  profileName: {},
-  deleteButton: {
+  profileName: {
+    fontSize: 16,
+  },
+  challengeButton: {
     padding: 5,
     borderRadius: 5,
   },
-  deleteButtonText: {},
+  challengeButtonText: {
+    fontSize: 20,
+  },
 });
 
 export default FriendList;

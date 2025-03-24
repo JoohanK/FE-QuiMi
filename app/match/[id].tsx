@@ -1,12 +1,21 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, ActivityIndicator } from "react-native";
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router"; // Lägg till useRouter
 import categoriesData from "@/assets/json/categories.json";
 import { db, auth } from "@/firebaseConfig";
-import { doc, onSnapshot, updateDoc, getDoc } from "firebase/firestore";
+import {
+  doc,
+  onSnapshot,
+  updateDoc,
+  getDoc,
+  setDoc,
+  collection,
+} from "firebase/firestore"; // Lägg till setDoc och collection
+import ButtonComponent from "@/components/ButtonComponent";
 
 export default function MatchScreen() {
   const { id } = useLocalSearchParams();
+  const router = useRouter(); // Lägg till router för att navigera till det nya spelet
   const [gameData, setGameData] = useState<any>(null);
   const [questions, setQuestions] = useState<any[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -67,7 +76,6 @@ export default function MatchScreen() {
                 );
                 setCategory(categoryMatch?.name || null);
               }
-              // Visa knapp bara om inga frågor visas än
               setShowStartButton(!showQuestions);
               setSelectingCategory(false);
             } else if (isRoundStarter && !roundData.categoryId) {
@@ -92,7 +100,7 @@ export default function MatchScreen() {
       }
     );
     return () => unsubscribe();
-  }, [id, isMyTurn, isRoundStarter, showQuestions]); // Lägg till showQuestions som beroende
+  }, [id, isMyTurn, isRoundStarter, showQuestions]);
 
   const getCurrentRound = (data: any) => {
     const rounds = Array.isArray(data?.rounds) ? data.rounds : [];
@@ -118,7 +126,7 @@ export default function MatchScreen() {
   const handleCategorySelection = async (selectedCategory: any) => {
     setCategory(selectedCategory.name);
     setSelectingCategory(false);
-    setShowStartButton(true); // Visa "Play your turn" efter kategorival
+    setShowStartButton(true);
     setShowQuestions(false);
     const fetchedQuestions = await fetchQuestions(selectedCategory.id);
     try {
@@ -232,7 +240,7 @@ export default function MatchScreen() {
     if (playerAnswers.length < 3) {
       if (currentQuestionIndex < questions.length - 1) {
         setCurrentQuestionIndex(currentQuestionIndex + 1);
-        setShowStartButton(false); // Förhindra att knappen visas mellan frågor
+        setShowStartButton(false);
       }
       return;
     } else {
@@ -268,7 +276,7 @@ export default function MatchScreen() {
             setCurrentQuestionIndex(0);
             setCategory(null);
             setSelectingCategory(false);
-            setShowStartButton(true); // Visa knapp för nästa runda
+            setShowStartButton(true);
             setShowQuestions(false);
             await updateDoc(gameRef, {
               turn: nextRoundStarter,
@@ -283,7 +291,7 @@ export default function MatchScreen() {
   };
 
   const handleStartTurn = () => {
-    setShowStartButton(false); // Dölj knapp efter klick
+    setShowStartButton(false);
     const roundData = gameData?.rounds?.[currentRound] || {};
     if (isRoundStarter && !roundData.categoryId) {
       setSelectingCategory(true);
@@ -295,6 +303,43 @@ export default function MatchScreen() {
       );
       setCategory(categoryMatch?.name || null);
       setShowQuestions(true);
+    }
+  };
+
+  const handlePlayAgain = async () => {
+    try {
+      // Hämta nuvarande speldata
+      const gameRef = doc(db, "games", id as string);
+      const docSnap = await getDoc(gameRef);
+      const currentGame = docSnap.data();
+
+      if (!currentGame) {
+        console.error("No game data found.");
+        return;
+      }
+
+      // Skapa ett nytt spel med omvända roller
+      const newGameData = {
+        player1Id: currentGame.player2Id, // Byt plats på spelarna
+        player2Id: currentGame.player1Id,
+        turn: currentGame.player2Id, // Den tidigare player2 börjar
+        matchStatus: "in progress",
+        player1Score: 0,
+        player2Score: 0,
+        rounds: [],
+        currentRound: 0,
+
+        createdAt: new Date().toISOString(),
+      };
+
+      // Skapa ett nytt dokument i "games"-samlingen
+      const newGameRef = doc(collection(db, "games")); // Genererar ett nytt unikt ID
+      await setDoc(newGameRef, newGameData);
+
+      // Navigera till det nya spelet
+      router.replace(`/match/${newGameRef.id}`);
+    } catch (error) {
+      console.error("Error creating new game:", error);
     }
   };
 
@@ -328,16 +373,7 @@ export default function MatchScreen() {
             ? "Player 2 Wins!"
             : "It's a Tie!"}
         </Text>
-        <TouchableOpacity
-          onPress={() => console.log("New game")}
-          style={{
-            backgroundColor: "blue",
-            padding: 15,
-            borderRadius: 5,
-          }}
-        >
-          <Text style={{ color: "white", fontSize: 18 }}>Play Again</Text>
-        </TouchableOpacity>
+        <ButtonComponent title="Play Again" onPress={handlePlayAgain} />
       </View>
     );
   }
@@ -349,21 +385,14 @@ export default function MatchScreen() {
       <Text>Min tur: {isMyTurn ? "Ja" : "Nej"}</Text>
 
       {isMyTurn && showStartButton && (
-        <TouchableOpacity
+        <ButtonComponent
           onPress={handleStartTurn}
-          style={{
-            backgroundColor: "blue",
-            padding: 10,
-            borderRadius: 5,
-            marginTop: 20,
-          }}
-        >
-          <Text style={{ color: "white", textAlign: "center" }}>
-            {isRoundStarter && !gameData?.rounds?.[currentRound]?.categoryId
+          title={
+            isRoundStarter && !gameData?.rounds?.[currentRound]?.categoryId
               ? "Start new round"
-              : "Play your turn"}
-          </Text>
-        </TouchableOpacity>
+              : "Play your turn"
+          }
+        />
       )}
 
       {selectingCategory && isMyTurn && isRoundStarter && (
