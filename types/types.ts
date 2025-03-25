@@ -20,3 +20,13 @@ export interface Friend {
 export interface FriendWithProfile extends Friend {
   profile: UserProfile | null;
 }
+
+export interface Game {
+  id: string;
+  player1Id: string;
+  player2Id: string;
+  turn: string;
+  matchStatus: string;
+  opponentName?: string;
+  photoURL?: string;
+}

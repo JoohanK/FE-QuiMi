@@ -7,17 +7,8 @@ import ButtonComponent from "@/components/ButtonComponent";
 import TitleComponent from "@/components/TitleComponent";
 import { auth, db } from "@/firebaseConfig";
 import { collection, query, where, onSnapshot } from "firebase/firestore";
-import { profileFromId, UserProfile } from "@/utils/profileFromId";
-
-interface Game {
-  id: string;
-  player1Id: string;
-  player2Id: string;
-  turn: string;
-  matchStatus: string;
-  opponentName?: string;
-  photoURL?: string;
-}
+import { profileFromId } from "@/utils/profileFromId";
+import { Game } from "@/types/types";
 
 export default function OngoingGamesList() {
   const [ongoingGames, setOngoingGames] = useState<Game[]>([]);

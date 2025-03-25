@@ -6,23 +6,11 @@ import ContainerComponent from "@/components/ContainerComponent";
 import ButtonComponent from "@/components/ButtonComponent";
 import TitleComponent from "@/components/TitleComponent";
 import { auth, db } from "@/firebaseConfig";
-import { collection, query, where, onSnapshot } from "firebase/firestore";
-import { profileFromId, UserProfile } from "@/utils/profileFromId";
 import OngoingGamesList from "@/components/OngoingGamesList";
-
-interface Game {
-  id: string;
-  player1Id: string;
-  player2Id: string;
-  turn: string;
-  matchStatus: string;
-  opponentName?: string;
-  photoURL?: string;
-}
 
 export default function Play() {
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [ongoingGames, setOngoingGames] = useState<Game[]>([]);
+
   const router = useRouter();
   const currentUser = auth.currentUser;
 
