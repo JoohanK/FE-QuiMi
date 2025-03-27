@@ -12,6 +12,7 @@ import {
   collection,
 } from "firebase/firestore"; // Lägg till setDoc och collection
 import ButtonComponent from "@/components/ButtonComponent";
+import BackButton from "@/components/BackButton";
 
 export default function MatchScreen() {
   const { id } = useLocalSearchParams();
@@ -44,7 +45,7 @@ export default function MatchScreen() {
         const data = snapshot.data();
         if (data) {
           setGameData(data);
-          const newCurrentRound = getCurrentRound(data);
+          const newCurrentRound = data.currentRound || getCurrentRound(data);
           setCurrentRound(newCurrentRound);
           const rounds = Array.isArray(data.rounds) ? data.rounds : [];
           setUsedCategories(
@@ -78,8 +79,7 @@ export default function MatchScreen() {
               }
               setShowStartButton(!showQuestions);
               setSelectingCategory(false);
-            } else if (isRoundStarter && !roundData.categoryId) {
-              setSelectingCategory(false);
+            } else if (isRoundStarter) {
               setQuestions([]);
               setCurrentQuestionIndex(0);
               setShowStartButton(true);
@@ -100,7 +100,7 @@ export default function MatchScreen() {
       }
     );
     return () => unsubscribe();
-  }, [id, isMyTurn, isRoundStarter, showQuestions]);
+  }, [id, isMyTurn, isRoundStarter, showQuestions, currentRound]);
 
   const getCurrentRound = (data: any) => {
     const rounds = Array.isArray(data?.rounds) ? data.rounds : [];
@@ -193,7 +193,12 @@ export default function MatchScreen() {
     const currentData = docSnap.data();
     if (!currentData || currentData.matchStatus === "completed") return;
 
-    const roundData = currentData.rounds[currentRound] || {};
+    const rounds = Array.isArray(currentData.rounds) ? currentData.rounds : [];
+    // Ensure the current round exists
+    if (!rounds[currentRound]) {
+      rounds[currentRound] = { player1Answers: [], player2Answers: [] };
+    }
+    const roundData = rounds[currentRound] || {};
     const currentPlayerAnswers = isPlayer1
       ? roundData.player1Answers || []
       : roundData.player2Answers || [];
@@ -210,11 +215,13 @@ export default function MatchScreen() {
     const scoreField = isPlayer1 ? "player1Score" : "player2Score";
 
     try {
-      const updatedRounds = [...currentData.rounds];
-      const currentAnswers = updatedRounds[currentRound][answersField] || [];
+      const updatedRounds = [...rounds];
       updatedRounds[currentRound] = {
         ...updatedRounds[currentRound],
-        [answersField]: [...currentAnswers, newAnswer],
+        [answersField]: [...currentPlayerAnswers, newAnswer],
+        categoryId:
+          roundData.categoryId || updatedRounds[currentRound]?.categoryId,
+        questions: roundData.questions || questions,
       };
       await updateDoc(gameRef, {
         rounds: updatedRounds,
@@ -226,13 +233,18 @@ export default function MatchScreen() {
     }
   };
 
+  // I handleNextQuestion
   const handleNextQuestion = async () => {
     const gameRef = doc(db, "games", id as string);
     const docSnap = await getDoc(gameRef);
     const currentData = docSnap.data();
     if (!currentData) return;
 
-    const roundData = currentData.rounds[currentRound] || {};
+    const rounds = Array.isArray(currentData.rounds) ? currentData.rounds : [];
+    const roundData = rounds[currentRound] || {
+      player1Answers: [],
+      player2Answers: [],
+    };
     const playerAnswers = isPlayer1
       ? roundData.player1Answers || []
       : roundData.player2Answers || [];
@@ -243,50 +255,50 @@ export default function MatchScreen() {
         setShowStartButton(false);
       }
       return;
-    } else {
-      const isPlayer1Turn = gameData.turn === gameData.player1Id;
-      const nextRoundStarter =
-        currentRound % 2 === 0 ? gameData.player2Id : gameData.player1Id;
-      const nextTurnId = isRoundStarter
-        ? isPlayer1Turn
-          ? gameData.player2Id
-          : gameData.player1Id
-        : nextRoundStarter;
+    }
 
-      try {
-        const opponentAnswers = isPlayer1
-          ? roundData.player2Answers || []
-          : roundData.player1Answers || [];
+    const opponentAnswers = isPlayer1
+      ? roundData.player2Answers || []
+      : roundData.player1Answers || [];
+    const bothPlayersDone =
+      (roundData.player1Answers?.length || 0) >= 3 &&
+      (roundData.player2Answers?.length || 0) >= 3;
 
-        if (isRoundStarter && opponentAnswers.length < 3) {
-          await updateDoc(gameRef, { turn: nextTurnId });
+    try {
+      if (bothPlayersDone) {
+        if (currentRound >= 3) {
+          // 4 rounds total (0, 1, 2, 3)
+          await updateDoc(gameRef, {
+            matchStatus: "completed",
+            completedAt: new Date().toISOString(), // Lägg till completedAt här
+          });
+        } else {
+          const nextRoundStarter =
+            (currentRound + 1) % 2 === 0
+              ? gameData.player1Id
+              : gameData.player2Id;
+          await updateDoc(gameRef, {
+            turn: nextRoundStarter,
+            currentRound: currentRound + 1,
+          });
           setQuestions([]);
           setCurrentQuestionIndex(0);
           setCategory(null);
-          setShowStartButton(false);
+          setSelectingCategory(false);
+          setShowStartButton(true);
           setShowQuestions(false);
-        } else if (
-          (roundData.player1Answers?.length || 0) >= 3 &&
-          (roundData.player2Answers?.length || 0) >= 3
-        ) {
-          if (currentRound >= 3) {
-            await updateDoc(gameRef, { matchStatus: "completed" });
-          } else {
-            setQuestions([]);
-            setCurrentQuestionIndex(0);
-            setCategory(null);
-            setSelectingCategory(false);
-            setShowStartButton(true);
-            setShowQuestions(false);
-            await updateDoc(gameRef, {
-              turn: nextRoundStarter,
-              currentRound: currentRound + 1,
-            });
-          }
         }
-      } catch (error) {
-        console.error("Error updating turn:", error);
+      } else {
+        const nextTurnId = isPlayer1 ? gameData.player2Id : gameData.player1Id;
+        await updateDoc(gameRef, { turn: nextTurnId });
+        setQuestions([]);
+        setCurrentQuestionIndex(0);
+        setCategory(null);
+        setShowStartButton(false);
+        setShowQuestions(false);
       }
+    } catch (error) {
+      console.error("Error updating turn:", error);
     }
   };
 
@@ -303,6 +315,10 @@ export default function MatchScreen() {
       );
       setCategory(categoryMatch?.name || null);
       setShowQuestions(true);
+    } else {
+      // Initialize new round if it doesn’t exist
+      setSelectingCategory(true);
+      setAvailableCategories(getCategories());
     }
   };
 
@@ -343,38 +359,45 @@ export default function MatchScreen() {
     }
   };
 
+  const onPress = () => {
+    router.push("/menu/play");
+  };
+
   if (!gameData) {
     return <ActivityIndicator size="large" color="blue" />;
   }
 
   if (gameData.matchStatus === "completed") {
     return (
-      <View
-        style={{
-          padding: 20,
-          alignItems: "center",
-          justifyContent: "center",
-          flex: 1,
-        }}
-      >
-        <Text style={{ fontSize: 32, fontWeight: "bold", marginBottom: 20 }}>
-          Game Over!
-        </Text>
-        <Text style={{ fontSize: 20 }}>
-          Player 1 Score: {gameData.player1Score}
-        </Text>
-        <Text style={{ fontSize: 20, marginBottom: 20 }}>
-          Player 2 Score: {gameData.player2Score}
-        </Text>
-        <Text style={{ fontSize: 24, fontWeight: "bold", marginBottom: 20 }}>
-          {gameData.player1Score > gameData.player2Score
-            ? "Player 1 Wins!"
-            : gameData.player2Score > gameData.player1Score
-            ? "Player 2 Wins!"
-            : "It's a Tie!"}
-        </Text>
-        <ButtonComponent title="Play Again" onPress={handlePlayAgain} />
-      </View>
+      <>
+        <BackButton onPress={onPress}></BackButton>
+        <View
+          style={{
+            padding: 20,
+            alignItems: "center",
+            justifyContent: "center",
+            flex: 1,
+          }}
+        >
+          <Text style={{ fontSize: 32, fontWeight: "bold", marginBottom: 20 }}>
+            Game Over!
+          </Text>
+          <Text style={{ fontSize: 20 }}>
+            Player 1 Score: {gameData.player1Score}
+          </Text>
+          <Text style={{ fontSize: 20, marginBottom: 20 }}>
+            Player 2 Score: {gameData.player2Score}
+          </Text>
+          <Text style={{ fontSize: 24, fontWeight: "bold", marginBottom: 20 }}>
+            {gameData.player1Score > gameData.player2Score
+              ? "Player 1 Wins!"
+              : gameData.player2Score > gameData.player1Score
+              ? "Player 2 Wins!"
+              : "It's a Tie!"}
+          </Text>
+          <ButtonComponent title="Play Again" onPress={handlePlayAgain} />
+        </View>
+      </>
     );
   }
 
@@ -453,7 +476,10 @@ export default function MatchScreen() {
         )}
 
       {!isMyTurn && (
-        <Text style={{ marginTop: 20 }}>Väntar på motståndaren...</Text>
+        <>
+          <BackButton onPress={onPress}></BackButton>
+          <Text style={{ marginTop: 20 }}>Väntar på motståndaren...</Text>
+        </>
       )}
     </View>
   );

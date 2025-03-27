@@ -16,6 +16,8 @@ import { profileFromId } from "@/utils/profileFromId";
 import TitleComponent from "./TitleComponent";
 import ContainerComponent from "./ContainerComponent";
 import { Friend, FriendWithProfile } from "@/types/types";
+import { Alert } from "react-native";
+import ButtonComponent from "./ButtonComponent";
 
 const FriendList = () => {
   const [friendsWithProfiles, setFriendsWithProfiles] = useState<
@@ -38,60 +40,76 @@ const FriendList = () => {
   };
 
   const handleChallengeFriend = async (friend: FriendWithProfile) => {
-    try {
-      if (!auth.currentUser) {
-        console.error("User not authenticated");
-        return;
-      }
-      const gamesRef = collection(db, "games");
+    Alert.alert(
+      "Challenge friend",
+      `${friend.profile?.displayName}?`,
+      [
+        {
+          text: "Challenge",
 
-      const friendUserId =
-        friend.userId1 === auth.currentUser.uid
-          ? friend.userId2
-          : friend.userId1;
+          onPress: async () => {
+            try {
+              if (!auth.currentUser) {
+                console.error("User not authenticated");
+                return;
+              }
+              const gamesRef = collection(db, "games");
 
-      const newGame = {
-        player1Id: auth.currentUser.uid,
-        player2Id: friendUserId,
-        rounds: [
-          {
-            roundNumber: 1,
-            player1Answers: [],
-            player2Answers: [],
-            categoryId: null,
-          },
-          {
-            roundNumber: 2,
-            player1Answers: [],
-            player2Answers: [],
-            categoryId: null,
-          },
-          {
-            roundNumber: 3,
-            player1Answers: [],
-            player2Answers: [],
-            categoryId: null,
-          },
-          {
-            roundNumber: 4,
-            player1Answers: [],
-            player2Answers: [],
-            categoryId: null,
-          },
-        ],
-        turn: auth.currentUser.uid,
-        player1Score: 0,
-        player2Score: 0,
-        matchStatus: "in progress",
-        createdAt: new Date().toISOString(), // Använd ISO-sträng för konsistens
-      };
-      const newGameDoc = await addDoc(gamesRef, newGame);
+              const friendUserId =
+                friend.userId1 === auth.currentUser.uid
+                  ? friend.userId2
+                  : friend.userId1;
 
-      console.log("Game created with ID:", newGameDoc.id);
-      router.push(`/match/${newGameDoc.id}`);
-    } catch (error) {
-      console.error("Error creating game:", error);
-    }
+              const newGame = {
+                player1Id: auth.currentUser.uid,
+                player2Id: friendUserId,
+                rounds: [
+                  {
+                    roundNumber: 1,
+                    player1Answers: [],
+                    player2Answers: [],
+                    categoryId: null,
+                  },
+                  {
+                    roundNumber: 2,
+                    player1Answers: [],
+                    player2Answers: [],
+                    categoryId: null,
+                  },
+                  {
+                    roundNumber: 3,
+                    player1Answers: [],
+                    player2Answers: [],
+                    categoryId: null,
+                  },
+                  {
+                    roundNumber: 4,
+                    player1Answers: [],
+                    player2Answers: [],
+                    categoryId: null,
+                  },
+                ],
+                turn: auth.currentUser.uid,
+                player1Score: 0,
+                player2Score: 0,
+                matchStatus: "in progress",
+                createdAt: new Date().toISOString(), // Använd ISO-sträng för konsistens
+              };
+              const newGameDoc = await addDoc(gamesRef, newGame);
+
+              console.log("Game created with ID:", newGameDoc.id);
+              router.push(`/match/${newGameDoc.id}`);
+            } catch (error) {
+              console.error("Error creating game:", error);
+            }
+          },
+        },
+        {
+          text: "Cancel",
+        },
+      ],
+      { cancelable: true }
+    );
   };
 
   useEffect(() => {
@@ -157,25 +175,26 @@ const FriendList = () => {
       <FlatList
         data={friendsWithProfiles}
         renderItem={({ item }) => (
-          <Pressable
-            onPress={() => handleFriendPress(item.id)}
-            style={styles.itemContainer}
-          >
-            <View style={styles.profileContainer}>
-              <Text style={styles.profileEmoji}>
-                {item.profile?.photoURL || ""}
-              </Text>
-              <Text style={styles.profileName}>
-                {item.profile?.displayName || "Loading..."}
-              </Text>
-            </View>
+          <>
             <Pressable
-              style={styles.challengeButton}
-              onPress={() => handleChallengeFriend(item)}
+              onPress={() => handleFriendPress(item.id)}
+              style={styles.itemContainer}
             >
-              <Text style={styles.challengeButtonText}>🎮</Text>
+              <View style={styles.profileContainer}>
+                <Text style={styles.profileEmoji}>
+                  {item.profile?.photoURL || ""}
+                </Text>
+                <Text style={styles.profileName}>
+                  {item.profile?.displayName || "Loading..."}
+                </Text>
+              </View>
+              <ButtonComponent
+                title="Challenge"
+                style={{ backgroundColor: "green" }}
+                onPress={() => handleChallengeFriend(item)}
+              ></ButtonComponent>
             </Pressable>
-          </Pressable>
+          </>
         )}
         keyExtractor={(item) => item.id}
       />
@@ -188,7 +207,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     minWidth: "100%",
     justifyContent: "space-between",
-    padding: 10,
+    paddingTop: 10,
+    paddingBottom: 10,
     borderBottomWidth: 1,
     borderBottomColor: "#ccc",
   },
@@ -201,13 +221,6 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   profileName: {
-    fontSize: 16,
-  },
-  challengeButton: {
-    padding: 5,
-    borderRadius: 5,
-  },
-  challengeButtonText: {
     fontSize: 20,
   },
 });

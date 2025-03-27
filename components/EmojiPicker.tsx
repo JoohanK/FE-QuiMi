@@ -1,6 +1,6 @@
-// EmojiPicker.tsx
 import React, { useState, useEffect } from "react";
-import { View, TouchableOpacity, Text, Platform } from "react-native";
+import { View, TouchableOpacity, Text, Dimensions } from "react-native";
+import { ScrollView } from "react-native-gesture-handler";
 
 interface EmojiPickerProps {
   onEmojiSelected: (emoji: string) => void;
@@ -12,6 +12,11 @@ interface EmojiList {
 
 const EmojiPicker: React.FC<EmojiPickerProps> = ({ onEmojiSelected }) => {
   const [profileEmojis, setProfileEmojis] = useState<string[]>([]);
+
+  // Hämta skärmbredden för att beräkna emoji-storlek
+  const screenWidth = Dimensions.get("window").width;
+  const emojisPerRow = 9; // Antal emojis per rad
+  const emojiContainerWidth = screenWidth / emojisPerRow; // Bredden för varje emoji-container
 
   useEffect(() => {
     const loadEmojis = async () => {
@@ -27,13 +32,27 @@ const EmojiPicker: React.FC<EmojiPickerProps> = ({ onEmojiSelected }) => {
   }, []);
 
   return (
-    <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
+    <ScrollView
+      contentContainerStyle={{
+        flexDirection: "row",
+        flexWrap: "wrap",
+        justifyContent: "center",
+      }}
+    >
       {profileEmojis.map((emoji) => (
-        <TouchableOpacity key={emoji} onPress={() => onEmojiSelected(emoji)}>
-          <Text style={{ fontSize: 30, margin: 5 }}>{emoji}</Text>
+        <TouchableOpacity
+          key={emoji}
+          onPress={() => onEmojiSelected(emoji)}
+          style={{
+            width: emojiContainerWidth, // Fast bredd för att passa 6 per rad
+            alignItems: "center", // Centrera emoji horisontellt
+            padding: 5, // Lite padding för att undvika överlappning
+          }}
+        >
+          <Text style={{ fontSize: 30 }}>{emoji}</Text>
         </TouchableOpacity>
       ))}
-    </View>
+    </ScrollView>
   );
 };
 

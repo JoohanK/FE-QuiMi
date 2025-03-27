@@ -13,6 +13,7 @@ import {
   query,
   where,
 } from "firebase/firestore";
+import { Alert } from "react-native";
 import ButtonComponent from "@/components/ButtonComponent";
 import ContainerComponent from "../../components/ContainerComponent";
 import InputComponent from "@/components/InputComponent";
@@ -91,24 +92,43 @@ export default function Profile() {
   };
 
   const handleSignOut = async () => {
-    try {
-      await signOut(auth);
-      setUser(null);
-    } catch (error) {
-      console.error("Error signing out:", error);
-    }
+    // Visa en bekräftelsepopup
+
+    Alert.alert(
+      "Are you sure?",
+      "Do you really want to sign out?",
+      [
+        {
+          text: "No",
+          style: "cancel", // Avbryter utan att göra något
+        },
+        {
+          text: "Yes",
+          onPress: async () => {
+            try {
+              await signOut(auth);
+              setUser(null);
+            } catch (error) {
+              console.error("Error signing out:", error);
+            }
+          },
+        },
+      ],
+      { cancelable: true } // Tillåter att stänga alerten genom att trycka utanför
+    );
   };
 
   if (!user) return null;
 
   return (
     <>
-      <FlexRowContainer>
-        <ProfileEmoji />
-        <DisplayNameComponent />
-      </FlexRowContainer>
       <ContainerComponent>
         <TitleComponent>Customize profile</TitleComponent>
+        <FlexRowContainer>
+          <ProfileEmoji />
+          <DisplayNameComponent />
+        </FlexRowContainer>
+        <Text></Text>
         {errorMessage ? (
           <Text style={{ color: "red" }}>{errorMessage}</Text>
         ) : null}
@@ -120,15 +140,22 @@ export default function Profile() {
         />
         <Text>Choose your Emoji</Text>
         <EmojiPicker onEmojiSelected={handleEmojiSelected} />
-        {selectedEmoji && <Text style={{ fontSize: 70 }}>{selectedEmoji}</Text>}
+
+        {selectedEmoji && (
+          <Text style={{ fontSize: 70, marginTop: 20 }}>{selectedEmoji}</Text>
+        )}
       </ContainerComponent>
-      <FlexRowContainer>
+      <FlexRowContainer style={{ marginBottom: 10 }}>
         {loading ? (
           <ActivityIndicator size="large" />
         ) : (
           <>
             <ButtonComponent title="Save" onPress={handleSave} />
-            <ButtonComponent title="Sign out" onPress={handleSignOut} />
+            <ButtonComponent
+              title="Sign out"
+              style={{ backgroundColor: "red" }}
+              onPress={handleSignOut}
+            />
           </>
         )}
       </FlexRowContainer>
