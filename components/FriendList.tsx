@@ -25,16 +25,6 @@ const FriendList = () => {
   >([]);
   const router = useRouter();
 
-  const deleteFriend = async (friendId: string) => {
-    try {
-      const friendDocRef = doc(db, "friends", friendId);
-      await deleteDoc(friendDocRef);
-      alert("Deleted friend");
-    } catch (error) {
-      console.error("Error deleting friend:", error);
-    }
-  };
-
   const handleFriendPress = (friendId: string) => {
     router.push(`/friend/${friendId}`);
   };
@@ -172,32 +162,36 @@ const FriendList = () => {
 
   return (
     <ContainerComponent>
-      <FlatList
-        data={friendsWithProfiles}
-        renderItem={({ item }) => (
-          <>
-            <Pressable
-              onPress={() => handleFriendPress(item.id)}
-              style={styles.itemContainer}
-            >
-              <View style={styles.profileContainer}>
-                <Text style={styles.profileEmoji}>
-                  {item.profile?.photoURL || ""}
-                </Text>
-                <Text style={styles.profileName}>
-                  {item.profile?.displayName || "Loading..."}
-                </Text>
-              </View>
-              <ButtonComponent
-                title="Challenge"
-                style={{ backgroundColor: "green" }}
-                onPress={() => handleChallengeFriend(item)}
-              ></ButtonComponent>
-            </Pressable>
-          </>
-        )}
-        keyExtractor={(item) => item.id}
-      />
+      {friendsWithProfiles.length > 0 ? (
+        <FlatList
+          data={friendsWithProfiles}
+          renderItem={({ item }) => (
+            <>
+              <Pressable
+                onPress={() => handleFriendPress(item.id)}
+                style={styles.itemContainer}
+              >
+                <View style={styles.profileContainer}>
+                  <Text style={styles.profileEmoji}>
+                    {item.profile?.photoURL || ""}
+                  </Text>
+                  <Text style={styles.profileName}>
+                    {item.profile?.displayName || "Loading..."}
+                  </Text>
+                </View>
+                <ButtonComponent
+                  title="Challenge"
+                  style={{ backgroundColor: "green" }}
+                  onPress={() => handleChallengeFriend(item)}
+                ></ButtonComponent>
+              </Pressable>
+            </>
+          )}
+          keyExtractor={(item) => item.id}
+        />
+      ) : (
+        <Text>No friends to show</Text>
+      )}
     </ContainerComponent>
   );
 };

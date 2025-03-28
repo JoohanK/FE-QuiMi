@@ -40,6 +40,16 @@ export default function FriendDetail() {
   const [friendPhoto, setFriendPhoto] = useState<string | null>(null);
   const currentUserId = auth.currentUser?.uid;
 
+  /* const deleteFriend = async (friendId: string) => {
+    try {
+      const friendDocRef = doc(db, "friends", friendId);
+      await deleteDoc(friendDocRef);
+      alert("Deleted friend");
+    } catch (error) {
+      console.error("Error deleting friend:", error);
+    }
+  }; */
+
   useEffect(() => {
     if (!id || !currentUserId) return;
 

@@ -68,6 +68,18 @@ export default function Profile() {
           return;
         }
 
+        if (displayName.length < 1) {
+          setErrorMessage("Name must be at least 1 character long");
+          setLoading(false);
+          return;
+        }
+
+        if (displayName.length > 20) {
+          setErrorMessage("Name must be at most 20 characters long");
+          setLoading(false);
+          return;
+        }
+
         await updateProfile(auth.currentUser, {
           displayName: displayName,
           photoURL: selectedEmoji,
@@ -107,6 +119,7 @@ export default function Profile() {
             try {
               await signOut(auth);
               setUser(null);
+              router.replace("/login"); // Navigera till inloggningssidan
             } catch (error) {
               console.error("Error signing out:", error);
             }

@@ -16,12 +16,16 @@ import InputComponent from "@/components/InputComponent";
 import FriendRequests from "@/components/FriendRequests";
 import TitleComponent from "@/components/TitleComponent";
 
-import { errorHandler } from "@/utils/errorHandler";
-
 export default function AddFriendComponent() {
   const [friendDisplayName, setFriendDisplayName] = useState("");
 
   const handleAddFriend = async () => {
+    console.log("Current user:", auth.currentUser);
+    if (!auth.currentUser) {
+      alert("You must be logged in to add a friend");
+      return;
+    }
+
     try {
       const lowercaseFriendDisplayName = friendDisplayName.toLowerCase();
       const usersRef = collection(db, "users");
@@ -39,7 +43,9 @@ export default function AddFriendComponent() {
       const friendDoc = querySnapshot.docs[0];
       const friendId = friendDoc.id;
 
-      if (friendId === auth.currentUser?.uid) {
+      console.log("Friend ID:", friendId);
+
+      if (friendId === auth.currentUser.uid) {
         alert("You can't add yourself as a friend");
         return;
       }
@@ -47,8 +53,8 @@ export default function AddFriendComponent() {
       const friendsRef = collection(db, "friends");
       const existingRequestQuery = query(
         friendsRef,
-        where("userId1", "in", [auth.currentUser?.uid, friendId]),
-        where("userId2", "in", [auth.currentUser?.uid, friendId])
+        where("userId1", "in", [auth.currentUser.uid, friendId]),
+        where("userId2", "in", [auth.currentUser.uid, friendId])
       );
       const existingRequestSnapshot = await getDocs(existingRequestQuery);
 
@@ -56,23 +62,29 @@ export default function AddFriendComponent() {
         alert("Friend request already sent or you are already friends.");
         return;
       }
-      await addDoc(friendsRef, {
-        userId1: auth.currentUser?.uid,
+
+      const friendRequestData = {
+        userId1: auth.currentUser.uid,
         userId2: friendId,
         status: "pending",
         createdAt: serverTimestamp(),
-      });
+      };
+      console.log("Sending friend request with data:", friendRequestData);
+
+      await addDoc(friendsRef, friendRequestData);
 
       alert("Friend request sent!");
     } catch (error) {
-      errorHandler(error, "Error adding friend:");
+      console.error("Detailed error:", error);
+      const errorMessage = (error as Error).message;
+      alert(`Error adding friend: ${errorMessage}`);
     }
   };
 
   return (
     <>
       <ContainerComponent>
-        <TitleComponent>Add Friend </TitleComponent>
+        <TitleComponent>Add Friend</TitleComponent>
         <InputComponent
           placeholder="Search username..."
           value={friendDisplayName}

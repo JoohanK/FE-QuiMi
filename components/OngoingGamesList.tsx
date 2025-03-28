@@ -110,7 +110,7 @@ export default function OngoingGamesList() {
                 <Pressable
                   onPress={() => handleResumeGame(item.id)}
                   style={{
-                    minWidth: "90%",
+                    minWidth: "100%",
                     padding: 10,
                     borderWidth: 3,
                     borderColor:
