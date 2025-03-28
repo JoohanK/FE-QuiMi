@@ -1,7 +1,7 @@
 import React, { useState, useContext } from "react";
 import { StyleSheet } from "react-native";
 import { auth, db } from "../../firebaseConfig";
-import { createUserWithEmailAndPassword } from "firebase/auth";
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth"; // Lägg till updateProfile
 import { useRouter } from "expo-router";
 import { setDoc, doc } from "firebase/firestore";
 import { AuthContext } from "@/context/AuthContext";
@@ -27,16 +27,23 @@ export default function Register() {
         password
       );
       const user = userCredential.user;
+      const emailUsername = email.split("@")[0]; // Ta bara delen före @
 
+      // Sätt displayName i Firebase Auth
+      await updateProfile(user, {
+        displayName: emailUsername,
+      });
+
+      // Spara användardata i Firestore
       await setDoc(doc(db, "users", user.uid), {
-        displayName: user.email,
+        displayName: emailUsername,
         email: user.email,
         photoURL: "",
         createdAt: new Date(),
       });
 
       alert("User registered: " + user.email);
-      setUser(user);
+      setUser({ ...user, displayName: emailUsername });
     } catch (error) {
       console.error("Registration error:", error);
       alert(error);
@@ -57,7 +64,11 @@ export default function Register() {
         secureTextEntry
         onChangeText={setPassword}
       />
-      <ButtonComponent title="Register" onPress={handleSubmit} />
+      <ButtonComponent
+        title="Register"
+        onPress={handleSubmit}
+        style={{ marginBottom: 5 }}
+      />
       <ButtonComponent
         title="Already have an account? Sign in"
         onPress={() => navigation.navigate("login")}

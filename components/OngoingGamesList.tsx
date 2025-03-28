@@ -100,9 +100,6 @@ export default function OngoingGamesList() {
   return (
     <>
       <ContainerComponent>
-        <Text></Text>
-        <Text></Text>
-        <Text></Text>
         <TitleComponent>Ongoing Games</TitleComponent>
         {ongoingGames.length > 0 ? (
           <View style={{ marginBottom: 20 }}>
@@ -113,9 +110,9 @@ export default function OngoingGamesList() {
                 <Pressable
                   onPress={() => handleResumeGame(item.id)}
                   style={{
-                    minWidth: "100%",
+                    minWidth: "90%",
                     padding: 10,
-                    borderWidth: 1,
+                    borderWidth: 3,
                     borderColor:
                       item.turn === currentUser?.uid ? "green" : "orange",
                     borderRadius: 5,
@@ -124,9 +121,9 @@ export default function OngoingGamesList() {
                     alignItems: "center",
                   }}
                 >
-                  <Text style={{ flex: 1 }}>
-                    vs {item.photoURL ? item.photoURL : "👤"}{" "}
-                    {item.opponentName}
+                  <Text style={{ flex: 1, fontSize: 16 }}>
+                    <Text style={{ fontWeight: "bold" }}>VS</Text>{" "}
+                    {item.photoURL ? item.photoURL : "👤"} {item.opponentName}
                   </Text>
                   <Text>
                     {item.turn === currentUser?.uid ? "(Your Turn)" : ""}

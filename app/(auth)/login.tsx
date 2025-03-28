@@ -48,7 +48,11 @@ export default function Login() {
         secureTextEntry
         onChangeText={setPassword}
       />
-      <ButtonComponent title="Sign in" onPress={handleSubmit} />
+      <ButtonComponent
+        title="Sign in"
+        onPress={handleSubmit}
+        style={{ marginBottom: 5 }}
+      />
 
       <ButtonComponent
         title="Forgot password?"

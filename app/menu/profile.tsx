@@ -3,7 +3,7 @@ import { Text, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
 import { AuthContext } from "../../context/AuthContext";
 import { auth, db } from "../../firebaseConfig";
-import { signOut, updateProfile } from "firebase/auth"; // Import updateProfile
+import { signOut, updateProfile } from "firebase/auth";
 import {
   setDoc,
   doc,
@@ -30,12 +30,14 @@ export default function Profile() {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [selectedEmoji, setSelectedEmoji] = useState<string | null>(
-    user?.photoURL || null // Korrigera initialt värde här
+    user?.photoURL || null
   );
 
   useEffect(() => {
     if (user) {
-      setDisplayName(user.displayName || user.email || "");
+      // Om displayName finns, använd det, annars ta e-postadressen före @
+      const emailUsername = user.email ? user.email.split("@")[0] : "";
+      setDisplayName(user.displayName || emailUsername);
     }
   }, [user]);
 
@@ -78,7 +80,6 @@ export default function Profile() {
         });
 
         const updatedUser = auth.currentUser;
-
         setUser(updatedUser);
 
         alert("Profile successfully updated");
@@ -92,15 +93,13 @@ export default function Profile() {
   };
 
   const handleSignOut = async () => {
-    // Visa en bekräftelsepopup
-
     Alert.alert(
       "Are you sure?",
       "Do you really want to sign out?",
       [
         {
           text: "No",
-          style: "cancel", // Avbryter utan att göra något
+          style: "cancel",
         },
         {
           text: "Yes",
@@ -114,7 +113,7 @@ export default function Profile() {
           },
         },
       ],
-      { cancelable: true } // Tillåter att stänga alerten genom att trycka utanför
+      { cancelable: true }
     );
   };
 

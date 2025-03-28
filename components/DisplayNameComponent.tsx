@@ -10,7 +10,7 @@ interface DisplayNameComponentProps {
 }
 
 const DisplayNameComponent: React.FC<DisplayNameComponentProps> = ({
-  fallback = "Anonym användare",
+  fallback = "Anonymous",
   style,
   size = 16, // Standard textstorlek
 }) => {

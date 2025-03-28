@@ -39,8 +39,7 @@ export default function Play() {
         <TitleComponent>Play</TitleComponent>
         <ButtonComponent title="Start New Game" onPress={toggleModal} />
         <Modal isVisible={isModalVisible} onBackdropPress={toggleModal}>
-          <ContainerComponent>
-            <TitleComponent>Choose Game Mode</TitleComponent>
+          <ContainerComponent style={{ justifyContent: "center", gap: 10 }}>
             <ButtonComponent title="Solo" onPress={handleSolo} />
             <ButtonComponent
               title="Challenge a Friend"

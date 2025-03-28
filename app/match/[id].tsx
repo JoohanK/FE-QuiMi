@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, ActivityIndicator } from "react-native";
-import { useLocalSearchParams, useRouter } from "expo-router"; // Lägg till useRouter
+import { useLocalSearchParams, useRouter } from "expo-router";
 import categoriesData from "@/assets/json/categories.json";
 import { db, auth } from "@/firebaseConfig";
 import {
@@ -10,13 +10,14 @@ import {
   getDoc,
   setDoc,
   collection,
-} from "firebase/firestore"; // Lägg till setDoc och collection
+} from "firebase/firestore";
 import ButtonComponent from "@/components/ButtonComponent";
 import BackButton from "@/components/BackButton";
+import he from "he";
 
 export default function MatchScreen() {
   const { id } = useLocalSearchParams();
-  const router = useRouter(); // Lägg till router för att navigera till det nya spelet
+  const router = useRouter();
   const [gameData, setGameData] = useState<any>(null);
   const [questions, setQuestions] = useState<any[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -158,12 +159,13 @@ export default function MatchScreen() {
       const data = await response.json();
       if (data.response_code === 0) {
         const formattedQuestions = data.results.map((item: any) => ({
-          question: item.question,
-          correctAnswer: item.correct_answer,
-          allAnswers: sortAnswers([
-            item.correct_answer,
-            ...item.incorrect_answers,
-          ]),
+          question: he.decode(item.question),
+          correctAnswer: he.decode(item.correct_answer),
+          allAnswers: sortAnswers(
+            [item.correct_answer, ...item.incorrect_answers].map((answer) =>
+              he.decode(answer)
+            )
+          ),
         }));
         setIsLoading(false);
         return formattedQuestions;
@@ -194,7 +196,6 @@ export default function MatchScreen() {
     if (!currentData || currentData.matchStatus === "completed") return;
 
     const rounds = Array.isArray(currentData.rounds) ? currentData.rounds : [];
-    // Ensure the current round exists
     if (!rounds[currentRound]) {
       rounds[currentRound] = { player1Answers: [], player2Answers: [] };
     }
@@ -233,7 +234,6 @@ export default function MatchScreen() {
     }
   };
 
-  // I handleNextQuestion
   const handleNextQuestion = async () => {
     const gameRef = doc(db, "games", id as string);
     const docSnap = await getDoc(gameRef);
@@ -267,10 +267,9 @@ export default function MatchScreen() {
     try {
       if (bothPlayersDone) {
         if (currentRound >= 3) {
-          // 4 rounds total (0, 1, 2, 3)
           await updateDoc(gameRef, {
             matchStatus: "completed",
-            completedAt: new Date().toISOString(), // Lägg till completedAt här
+            completedAt: new Date().toISOString(),
           });
         } else {
           const nextRoundStarter =
@@ -316,7 +315,6 @@ export default function MatchScreen() {
       setCategory(categoryMatch?.name || null);
       setShowQuestions(true);
     } else {
-      // Initialize new round if it doesn’t exist
       setSelectingCategory(true);
       setAvailableCategories(getCategories());
     }
@@ -324,7 +322,6 @@ export default function MatchScreen() {
 
   const handlePlayAgain = async () => {
     try {
-      // Hämta nuvarande speldata
       const gameRef = doc(db, "games", id as string);
       const docSnap = await getDoc(gameRef);
       const currentGame = docSnap.data();
@@ -334,25 +331,21 @@ export default function MatchScreen() {
         return;
       }
 
-      // Skapa ett nytt spel med omvända roller
       const newGameData = {
-        player1Id: currentGame.player2Id, // Byt plats på spelarna
+        player1Id: currentGame.player2Id,
         player2Id: currentGame.player1Id,
-        turn: currentGame.player2Id, // Den tidigare player2 börjar
+        turn: currentGame.player2Id,
         matchStatus: "in progress",
         player1Score: 0,
         player2Score: 0,
         rounds: [],
         currentRound: 0,
-
         createdAt: new Date().toISOString(),
       };
 
-      // Skapa ett nytt dokument i "games"-samlingen
-      const newGameRef = doc(collection(db, "games")); // Genererar ett nytt unikt ID
+      const newGameRef = doc(collection(db, "games"));
       await setDoc(newGameRef, newGameData);
 
-      // Navigera till det nya spelet
       router.replace(`/match/${newGameRef.id}`);
     } catch (error) {
       console.error("Error creating new game:", error);
