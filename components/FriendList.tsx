@@ -30,76 +30,71 @@ const FriendList = () => {
   };
 
   const handleChallengeFriend = async (friend: FriendWithProfile) => {
-    Alert.alert(
-      "Challenge friend",
-      `${friend.profile?.displayName}?`,
-      [
-        {
-          text: "Challenge",
+    Alert.alert("Challenge friend", `${friend.profile?.displayName}?`, [
+      {
+        text: "Cancel",
+      },
+      {
+        text: "Challenge",
 
-          onPress: async () => {
-            try {
-              if (!auth.currentUser) {
-                console.error("User not authenticated");
-                return;
-              }
-              const gamesRef = collection(db, "games");
-
-              const friendUserId =
-                friend.userId1 === auth.currentUser.uid
-                  ? friend.userId2
-                  : friend.userId1;
-
-              const newGame = {
-                player1Id: auth.currentUser.uid,
-                player2Id: friendUserId,
-                rounds: [
-                  {
-                    roundNumber: 1,
-                    player1Answers: [],
-                    player2Answers: [],
-                    categoryId: null,
-                  },
-                  {
-                    roundNumber: 2,
-                    player1Answers: [],
-                    player2Answers: [],
-                    categoryId: null,
-                  },
-                  {
-                    roundNumber: 3,
-                    player1Answers: [],
-                    player2Answers: [],
-                    categoryId: null,
-                  },
-                  {
-                    roundNumber: 4,
-                    player1Answers: [],
-                    player2Answers: [],
-                    categoryId: null,
-                  },
-                ],
-                turn: auth.currentUser.uid,
-                player1Score: 0,
-                player2Score: 0,
-                matchStatus: "in progress",
-                createdAt: new Date().toISOString(), // Använd ISO-sträng för konsistens
-              };
-              const newGameDoc = await addDoc(gamesRef, newGame);
-
-              console.log("Game created with ID:", newGameDoc.id);
-              router.push(`/match/${newGameDoc.id}`);
-            } catch (error) {
-              console.error("Error creating game:", error);
+        onPress: async () => {
+          try {
+            if (!auth.currentUser) {
+              console.error("User not authenticated");
+              return;
             }
-          },
+            const gamesRef = collection(db, "games");
+
+            const friendUserId =
+              friend.userId1 === auth.currentUser.uid
+                ? friend.userId2
+                : friend.userId1;
+
+            const newGame = {
+              player1Id: auth.currentUser.uid,
+              player2Id: friendUserId,
+              rounds: [
+                {
+                  roundNumber: 1,
+                  player1Answers: [],
+                  player2Answers: [],
+                  categoryId: null,
+                },
+                {
+                  roundNumber: 2,
+                  player1Answers: [],
+                  player2Answers: [],
+                  categoryId: null,
+                },
+                {
+                  roundNumber: 3,
+                  player1Answers: [],
+                  player2Answers: [],
+                  categoryId: null,
+                },
+                {
+                  roundNumber: 4,
+                  player1Answers: [],
+                  player2Answers: [],
+                  categoryId: null,
+                },
+              ],
+              turn: auth.currentUser.uid,
+              player1Score: 0,
+              player2Score: 0,
+              matchStatus: "in progress",
+              createdAt: new Date().toISOString(), // Använd ISO-sträng för konsistens
+            };
+            const newGameDoc = await addDoc(gamesRef, newGame);
+
+            console.log("Game created with ID:", newGameDoc.id);
+            router.push(`/match/${newGameDoc.id}`);
+          } catch (error) {
+            console.error("Error creating game:", error);
+          }
         },
-        {
-          text: "Cancel",
-        },
-      ],
-      { cancelable: true }
-    );
+      },
+    ]);
   };
 
   useEffect(() => {

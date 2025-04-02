@@ -190,6 +190,11 @@ const FriendRequests = () => {
 
 const styles = StyleSheet.create({
   container: {},
+  pendingRequestContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
   itemContainer: {
     flexDirection: "row",
     minWidth: "100%",

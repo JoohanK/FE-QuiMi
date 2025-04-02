@@ -30,3 +30,9 @@ export interface Game {
   opponentName?: string;
   photoURL?: string;
 }
+
+export interface QuestionCardProps {
+  category: string | null;
+  questionNumber: number;
+  question: string;
+}

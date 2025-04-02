@@ -14,6 +14,8 @@ import {
 import ButtonComponent from "@/components/ButtonComponent";
 import BackButton from "@/components/BackButton";
 import he from "he";
+import QuestionCard from "@/components/QuestionCard";
+import TitleComponent from "@/components/TitleComponent";
 
 export default function MatchScreen() {
   const { id } = useLocalSearchParams();
@@ -29,6 +31,8 @@ export default function MatchScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [showStartButton, setShowStartButton] = useState(true);
   const [showQuestions, setShowQuestions] = useState(false);
+  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
+  const [answerSubmitted, setAnswerSubmitted] = useState(false);
 
   const isPlayer1 = auth.currentUser?.uid === gameData?.player1Id;
   const isMyTurn = auth.currentUser?.uid === gameData?.turn;
@@ -51,6 +55,15 @@ export default function MatchScreen() {
           const rounds = Array.isArray(data.rounds) ? data.rounds : [];
           setUsedCategories(
             rounds.map((r: any) => r?.categoryId).filter(Boolean)
+          );
+
+          console.log(
+            "useEffect: turn:",
+            data.turn,
+            "currentRound:",
+            newCurrentRound,
+            "isMyTurn:",
+            isMyTurn
           );
 
           const roundData = rounds[newCurrentRound] || {};
@@ -189,7 +202,16 @@ export default function MatchScreen() {
     });
   };
 
-  const handleAnswer = async (selectedAnswer: string) => {
+  const handleAnswer = (selectedAnswer: string) => {
+    if (answerSubmitted) return;
+
+    setSelectedAnswer(selectedAnswer);
+    setAnswerSubmitted(true);
+  };
+
+  const handleNextQuestion = async () => {
+    if (!answerSubmitted || !selectedAnswer) return;
+
     const gameRef = doc(db, "games", id as string);
     const docSnap = await getDoc(gameRef);
     const currentData = docSnap.data();
@@ -216,69 +238,58 @@ export default function MatchScreen() {
     const scoreField = isPlayer1 ? "player1Score" : "player2Score";
 
     try {
-      const updatedRounds = [...rounds];
-      updatedRounds[currentRound] = {
-        ...updatedRounds[currentRound],
+      // Uppdatera rundan med det nya svaret
+      rounds[currentRound] = {
+        ...rounds[currentRound],
         [answersField]: [...currentPlayerAnswers, newAnswer],
-        categoryId:
-          roundData.categoryId || updatedRounds[currentRound]?.categoryId,
+        categoryId: roundData.categoryId || rounds[currentRound]?.categoryId,
         questions: roundData.questions || questions,
       };
       await updateDoc(gameRef, {
-        rounds: updatedRounds,
+        rounds: rounds,
         [scoreField]: currentData[scoreField] + (isCorrect ? 1 : 0),
       });
-      await handleNextQuestion();
-    } catch (error) {
-      console.error("Error updating answer:", error);
-    }
-  };
 
-  const handleNextQuestion = async () => {
-    const gameRef = doc(db, "games", id as string);
-    const docSnap = await getDoc(gameRef);
-    const currentData = docSnap.data();
-    if (!currentData) return;
+      // Hämta uppdaterad data efter att svaret sparats
+      const updatedDocSnap = await getDoc(gameRef);
+      const updatedData = updatedDocSnap.data();
+      const updatedRounds = Array.isArray(updatedData?.rounds)
+        ? updatedData.rounds
+        : [];
+      const updatedRoundData = updatedRounds[currentRound] || {};
+      const p1AnswersLength = updatedRoundData.player1Answers?.length || 0;
+      const p2AnswersLength = updatedRoundData.player2Answers?.length || 0;
+      const bothPlayersDone = p1AnswersLength >= 3 && p2AnswersLength >= 3;
 
-    const rounds = Array.isArray(currentData.rounds) ? currentData.rounds : [];
-    const roundData = rounds[currentRound] || {
-      player1Answers: [],
-      player2Answers: [],
-    };
-    const playerAnswers = isPlayer1
-      ? roundData.player1Answers || []
-      : roundData.player2Answers || [];
-
-    if (playerAnswers.length < 3) {
       if (currentQuestionIndex < questions.length - 1) {
+        // Gå till nästa fråga
         setCurrentQuestionIndex(currentQuestionIndex + 1);
+        setSelectedAnswer(null);
+        setAnswerSubmitted(false);
         setShowStartButton(false);
-      }
-      return;
-    }
-
-    const opponentAnswers = isPlayer1
-      ? roundData.player2Answers || []
-      : roundData.player1Answers || [];
-    const bothPlayersDone =
-      (roundData.player1Answers?.length || 0) >= 3 &&
-      (roundData.player2Answers?.length || 0) >= 3;
-
-    try {
-      if (bothPlayersDone) {
+      } else if (bothPlayersDone) {
+        // Båda spelarna är klara med rundan
         if (currentRound >= 3) {
+          console.log("Match completed, currentRound:", currentRound);
           await updateDoc(gameRef, {
             matchStatus: "completed",
             completedAt: new Date().toISOString(),
           });
         } else {
+          const nextRound = currentRound + 1;
           const nextRoundStarter =
-            (currentRound + 1) % 2 === 0
-              ? gameData.player1Id
-              : gameData.player2Id;
+            nextRound % 2 === 0 ? gameData.player1Id : gameData.player2Id;
+          console.log(
+            "Both players done, currentRound:",
+            currentRound,
+            "nextRound:",
+            nextRound,
+            "nextRoundStarter:",
+            nextRoundStarter
+          );
           await updateDoc(gameRef, {
             turn: nextRoundStarter,
-            currentRound: currentRound + 1,
+            currentRound: nextRound,
           });
           setQuestions([]);
           setCurrentQuestionIndex(0);
@@ -288,7 +299,14 @@ export default function MatchScreen() {
           setShowQuestions(false);
         }
       } else {
+        // Bara en spelare är klar
         const nextTurnId = isPlayer1 ? gameData.player2Id : gameData.player1Id;
+        console.log(
+          "Only one player done, nextTurnId:",
+          nextTurnId,
+          "currentRound:",
+          currentRound
+        );
         await updateDoc(gameRef, { turn: nextTurnId });
         setQuestions([]);
         setCurrentQuestionIndex(0);
@@ -296,8 +314,10 @@ export default function MatchScreen() {
         setShowStartButton(false);
         setShowQuestions(false);
       }
+      setSelectedAnswer(null);
+      setAnswerSubmitted(false);
     } catch (error) {
-      console.error("Error updating turn:", error);
+      console.error("Error updating answer or turn:", error);
     }
   };
 
@@ -363,7 +383,7 @@ export default function MatchScreen() {
   if (gameData.matchStatus === "completed") {
     return (
       <>
-        <BackButton onPress={onPress}></BackButton>
+        <BackButton style={{ marginLeft: 0 }} onPress={onPress}></BackButton>
         <View
           style={{
             padding: 20,
@@ -396,19 +416,18 @@ export default function MatchScreen() {
 
   return (
     <View style={{ padding: 20 }}>
-      <Text style={{ fontSize: 20, fontWeight: "bold" }}>Match ID: {id}</Text>
-      <Text>Runda: {currentRound + 1}</Text>
-      <Text>Min tur: {isMyTurn ? "Ja" : "Nej"}</Text>
-
       {isMyTurn && showStartButton && (
-        <ButtonComponent
-          onPress={handleStartTurn}
-          title={
-            isRoundStarter && !gameData?.rounds?.[currentRound]?.categoryId
-              ? "Start new round"
-              : "Play your turn"
-          }
-        />
+        <>
+          <BackButton style={{ marginLeft: 0 }} onPress={onPress}></BackButton>
+          <ButtonComponent
+            onPress={handleStartTurn}
+            title={
+              isRoundStarter && !gameData?.rounds?.[currentRound]?.categoryId
+                ? ("Start round " + (currentRound + 1)).toUpperCase()
+                : "Play your turn"
+            }
+          />
+        </>
       )}
 
       {selectingCategory && isMyTurn && isRoundStarter && (
@@ -420,7 +439,7 @@ export default function MatchScreen() {
               onPress={() => handleCategorySelection(cat)}
               style={{
                 padding: 10,
-                backgroundColor: "lightgray",
+                backgroundColor: cat.color || "lightgray",
                 marginVertical: 5,
                 borderRadius: 5,
               }}
@@ -442,36 +461,59 @@ export default function MatchScreen() {
         isMyTurn &&
         !selectingCategory && (
           <View style={{ marginTop: 20 }}>
-            <Text style={{ fontSize: 18, fontWeight: "bold" }}>
-              Kategori: {category}
-            </Text>
-            <Text style={{ fontSize: 16, marginTop: 10 }}>
-              {currentQuestionIndex + 1}.{" "}
-              {questions[currentQuestionIndex]?.question || ""}
-            </Text>
+            <TouchableOpacity
+              onPress={handleNextQuestion}
+              disabled={!answerSubmitted}
+            >
+              <QuestionCard
+                category={category}
+                questionNumber={currentQuestionIndex + 1}
+                question={questions[currentQuestionIndex]?.question || ""}
+                color={
+                  categoriesData.categories.find((cat) => cat.name === category)
+                    ?.color
+                }
+              />
+            </TouchableOpacity>
             {questions[currentQuestionIndex]?.allAnswers?.map(
-              (answer: string, ansIndex: number) => (
-                <TouchableOpacity
-                  key={ansIndex}
-                  onPress={() => handleAnswer(answer)}
-                  style={{
-                    backgroundColor: "lightblue",
-                    padding: 10,
-                    marginVertical: 5,
-                    borderRadius: 5,
-                  }}
-                >
-                  <Text>{answer}</Text>
-                </TouchableOpacity>
-              )
+              (answer: string, ansIndex: number) => {
+                const isCorrect =
+                  answer === questions[currentQuestionIndex].correctAnswer;
+                const isSelected = answer === selectedAnswer;
+                let backgroundColor = "lightblue";
+                if (answerSubmitted) {
+                  if (isCorrect) {
+                    backgroundColor = "green";
+                  } else if (isSelected) {
+                    backgroundColor = "red";
+                  }
+                }
+
+                return (
+                  <TouchableOpacity
+                    key={ansIndex}
+                    onPress={() => handleAnswer(answer)}
+                    style={{
+                      backgroundColor,
+                      padding: 10,
+                      marginVertical: 5,
+                      borderRadius: 5,
+                      opacity: answerSubmitted ? 0.7 : 1,
+                    }}
+                    disabled={answerSubmitted}
+                  >
+                    <Text style={{ color: "white" }}>{answer}</Text>
+                  </TouchableOpacity>
+                );
+              }
             )}
           </View>
         )}
 
       {!isMyTurn && (
         <>
-          <BackButton onPress={onPress}></BackButton>
-          <Text style={{ marginTop: 20 }}>Väntar på motståndaren...</Text>
+          <BackButton style={{ marginLeft: 0 }} onPress={onPress}></BackButton>
+          <Text style={{ marginTop: 20 }}>Opponent's turn..</Text>
         </>
       )}
     </View>
