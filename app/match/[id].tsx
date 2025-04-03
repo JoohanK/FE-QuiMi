@@ -16,6 +16,7 @@ import BackButton from "@/components/BackButton";
 import he from "he";
 import QuestionCard from "@/components/QuestionCard";
 import TitleComponent from "@/components/TitleComponent";
+import IsLoading from "@/components/IsLoading";
 
 export default function MatchScreen() {
   const { id } = useLocalSearchParams();
@@ -416,7 +417,7 @@ export default function MatchScreen() {
 
   return (
     <View style={{ padding: 20 }}>
-      {isMyTurn && showStartButton && (
+      {isMyTurn && showStartButton && !isLoading && (
         <>
           <BackButton style={{ marginLeft: 0 }} onPress={onPress}></BackButton>
           <ButtonComponent
@@ -449,11 +450,12 @@ export default function MatchScreen() {
           ))}
         </View>
       )}
-
       {isLoading && (
-        <View style={{ marginTop: 20 }}>
-          <ActivityIndicator size="large" color="blue" />
-        </View>
+        <IsLoading
+          message="Fetching questions..."
+          size="large"
+          color="#1E90FF"
+        />
       )}
 
       {showQuestions &&
