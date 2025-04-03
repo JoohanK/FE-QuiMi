@@ -34,6 +34,7 @@ export default function MatchScreen() {
   const [showQuestions, setShowQuestions] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [answerSubmitted, setAnswerSubmitted] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
   const isPlayer1 = auth.currentUser?.uid === gameData?.player1Id;
   const isMyTurn = auth.currentUser?.uid === gameData?.turn;
@@ -58,15 +59,6 @@ export default function MatchScreen() {
             rounds.map((r: any) => r?.categoryId).filter(Boolean)
           );
 
-          console.log(
-            "useEffect: turn:",
-            data.turn,
-            "currentRound:",
-            newCurrentRound,
-            "isMyTurn:",
-            isMyTurn
-          );
-
           const roundData = rounds[newCurrentRound] || {};
           const hasQuestions = roundData.questions?.length > 0;
           const p1AnswersLength = roundData.player1Answers?.length || 0;
@@ -76,7 +68,7 @@ export default function MatchScreen() {
             setQuestions([]);
             setCurrentQuestionIndex(0);
             setCategory(null);
-            setSelectingCategory(false);
+            setSelecting_Category(false);
             setShowStartButton(false);
             setShowQuestions(false);
           } else if (isMyTurn) {
@@ -92,12 +84,44 @@ export default function MatchScreen() {
                 );
                 setCategory(categoryMatch?.name || null);
               }
-              setShowStartButton(!showQuestions);
+              const currentPlayerAnswersLength = isPlayer1
+                ? p1AnswersLength
+                : p2AnswersLength;
+              setCurrentQuestionIndex(currentPlayerAnswersLength);
+              setShowQuestions(true);
+              setShowStartButton(currentPlayerAnswersLength === 0);
               setSelectingCategory(false);
             } else if (isRoundStarter) {
               setQuestions([]);
               setCurrentQuestionIndex(0);
-              setShowStartButton(true);
+              setShowQuestions(false);
+
+              const savedCategories = roundData.availableCategories || [];
+              if (savedCategories.length > 0) {
+                setAvailableCategories(savedCategories);
+                setShowStartButton(!roundData.categoryId);
+                setSelectingCategory(!roundData.categoryId);
+              } else if (!roundData.categoryId && !selectingCategory) {
+                setSelectingCategory(true);
+                setShowStartButton(true);
+                const newCategories = getCategories();
+                setAvailableCategories(newCategories);
+                const updatedRounds = [...rounds];
+                updatedRounds[newCurrentRound] = {
+                  ...updatedRounds[newCurrentRound],
+                  availableCategories: newCategories,
+                };
+                updateDoc(gameRef, { rounds: updatedRounds });
+              } else {
+                setShowStartButton(true);
+                setSelectingCategory(!roundData.categoryId);
+              }
+            } else {
+              setQuestions([]);
+              setCurrentQuestionIndex(0);
+              setCategory(null);
+              setSelectingCategory(false);
+              setShowStartButton(false);
               setShowQuestions(false);
             }
           } else {
@@ -115,7 +139,7 @@ export default function MatchScreen() {
       }
     );
     return () => unsubscribe();
-  }, [id, isMyTurn, isRoundStarter, showQuestions, currentRound]);
+  }, [id, isMyTurn, isRoundStarter, currentRound, selectingCategory]);
 
   const getCurrentRound = (data: any) => {
     const rounds = Array.isArray(data?.rounds) ? data.rounds : [];
@@ -154,6 +178,9 @@ export default function MatchScreen() {
           ...updatedRounds[currentRound],
           categoryId: selectedCategory.id,
           questions: fetchedQuestions,
+          availableCategories:
+            updatedRounds[currentRound]?.availableCategories ||
+            availableCategories,
         };
         await updateDoc(gameRef, { rounds: updatedRounds });
         setQuestions(fetchedQuestions);
@@ -213,6 +240,8 @@ export default function MatchScreen() {
   const handleNextQuestion = async () => {
     if (!answerSubmitted || !selectedAnswer) return;
 
+    setIsTransitioning(true);
+
     const gameRef = doc(db, "games", id as string);
     const docSnap = await getDoc(gameRef);
     const currentData = docSnap.data();
@@ -229,6 +258,7 @@ export default function MatchScreen() {
 
     if (currentPlayerAnswers.length >= 3) {
       console.log("Player has already answered 3 questions, skipping save.");
+      setIsTransitioning(false);
       return;
     }
 
@@ -239,19 +269,19 @@ export default function MatchScreen() {
     const scoreField = isPlayer1 ? "player1Score" : "player2Score";
 
     try {
-      // Uppdatera rundan med det nya svaret
       rounds[currentRound] = {
         ...rounds[currentRound],
         [answersField]: [...currentPlayerAnswers, newAnswer],
         categoryId: roundData.categoryId || rounds[currentRound]?.categoryId,
         questions: roundData.questions || questions,
+        availableCategories:
+          roundData.availableCategories || availableCategories,
       };
       await updateDoc(gameRef, {
         rounds: rounds,
         [scoreField]: currentData[scoreField] + (isCorrect ? 1 : 0),
       });
 
-      // Hämta uppdaterad data efter att svaret sparats
       const updatedDocSnap = await getDoc(gameRef);
       const updatedData = updatedDocSnap.data();
       const updatedRounds = Array.isArray(updatedData?.rounds)
@@ -262,14 +292,13 @@ export default function MatchScreen() {
       const p2AnswersLength = updatedRoundData.player2Answers?.length || 0;
       const bothPlayersDone = p1AnswersLength >= 3 && p2AnswersLength >= 3;
 
+      setSelectedAnswer(null);
+      setAnswerSubmitted(false);
+
       if (currentQuestionIndex < questions.length - 1) {
-        // Gå till nästa fråga
         setCurrentQuestionIndex(currentQuestionIndex + 1);
-        setSelectedAnswer(null);
-        setAnswerSubmitted(false);
         setShowStartButton(false);
       } else if (bothPlayersDone) {
-        // Båda spelarna är klara med rundan
         if (currentRound >= 3) {
           console.log("Match completed, currentRound:", currentRound);
           await updateDoc(gameRef, {
@@ -300,7 +329,6 @@ export default function MatchScreen() {
           setShowQuestions(false);
         }
       } else {
-        // Bara en spelare är klar
         const nextTurnId = isPlayer1 ? gameData.player2Id : gameData.player1Id;
         console.log(
           "Only one player done, nextTurnId:",
@@ -315,10 +343,10 @@ export default function MatchScreen() {
         setShowStartButton(false);
         setShowQuestions(false);
       }
-      setSelectedAnswer(null);
-      setAnswerSubmitted(false);
+      setIsTransitioning(false);
     } catch (error) {
       console.error("Error updating answer or turn:", error);
+      setIsTransitioning(false);
     }
   };
 
@@ -327,7 +355,20 @@ export default function MatchScreen() {
     const roundData = gameData?.rounds?.[currentRound] || {};
     if (isRoundStarter && !roundData.categoryId) {
       setSelectingCategory(true);
-      setAvailableCategories(getCategories());
+      const savedCategories = roundData.availableCategories || [];
+      if (savedCategories.length > 0) {
+        setAvailableCategories(savedCategories);
+      } else {
+        const newCategories = getCategories();
+        setAvailableCategories(newCategories);
+        const gameRef = doc(db, "games", id as string);
+        const updatedRounds = [...(gameData?.rounds || [])];
+        updatedRounds[currentRound] = {
+          ...updatedRounds[currentRound],
+          availableCategories: newCategories,
+        };
+        updateDoc(gameRef, { rounds: updatedRounds });
+      }
     } else if (roundData.questions?.length > 0) {
       setQuestions(roundData.questions);
       const categoryMatch = categoriesData.categories.find(
@@ -337,7 +378,15 @@ export default function MatchScreen() {
       setShowQuestions(true);
     } else {
       setSelectingCategory(true);
-      setAvailableCategories(getCategories());
+      const newCategories = getCategories();
+      setAvailableCategories(newCategories);
+      const gameRef = doc(db, "games", id as string);
+      const updatedRounds = [...(gameData?.rounds || [])];
+      updatedRounds[currentRound] = {
+        ...updatedRounds[currentRound],
+        availableCategories: newCategories,
+      };
+      updateDoc(gameRef, { rounds: updatedRounds });
     }
   };
 
@@ -416,7 +465,7 @@ export default function MatchScreen() {
   }
 
   return (
-    <View style={{ padding: 20 }}>
+    <View style={{ padding: 20, flex: 1 }}>
       {isMyTurn && showStartButton && !isLoading && (
         <>
           <BackButton style={{ marginLeft: 0 }} onPress={onPress}></BackButton>
@@ -431,7 +480,7 @@ export default function MatchScreen() {
         </>
       )}
 
-      {selectingCategory && isMyTurn && isRoundStarter && (
+      {selectingCategory && isMyTurn && isRoundStarter && !showStartButton && (
         <View style={{ marginTop: 20 }}>
           <Text style={{ fontSize: 18 }}>Choose Category:</Text>
           {availableCategories.map((cat) => (
@@ -461,7 +510,9 @@ export default function MatchScreen() {
       {showQuestions &&
         questions.length > 0 &&
         isMyTurn &&
-        !selectingCategory && (
+        !selectingCategory &&
+        !showStartButton &&
+        currentQuestionIndex < questions.length && ( // Lägg till denna kontroll
           <View style={{ marginTop: 20 }}>
             <TouchableOpacity
               onPress={handleNextQuestion}
@@ -477,38 +528,40 @@ export default function MatchScreen() {
                 }
               />
             </TouchableOpacity>
-            {questions[currentQuestionIndex]?.allAnswers?.map(
-              (answer: string, ansIndex: number) => {
-                const isCorrect =
-                  answer === questions[currentQuestionIndex].correctAnswer;
-                const isSelected = answer === selectedAnswer;
-                let backgroundColor = "lightblue";
-                if (answerSubmitted) {
-                  if (isCorrect) {
-                    backgroundColor = "green";
-                  } else if (isSelected) {
-                    backgroundColor = "red";
-                  }
-                }
+            {!isTransitioning &&
+              questions[currentQuestionIndex]?.allAnswers?.map(
+                (answer: string, ansIndex: number) => {
+                  const isCorrect =
+                    answer === questions[currentQuestionIndex].correctAnswer;
+                  const isSelected = answer === selectedAnswer;
+                  let backgroundColor = "lightblue";
 
-                return (
-                  <TouchableOpacity
-                    key={ansIndex}
-                    onPress={() => handleAnswer(answer)}
-                    style={{
-                      backgroundColor,
-                      padding: 10,
-                      marginVertical: 5,
-                      borderRadius: 5,
-                      opacity: answerSubmitted ? 0.7 : 1,
-                    }}
-                    disabled={answerSubmitted}
-                  >
-                    <Text style={{ color: "white" }}>{answer}</Text>
-                  </TouchableOpacity>
-                );
-              }
-            )}
+                  if (answerSubmitted) {
+                    if (isCorrect) {
+                      backgroundColor = "green";
+                    } else if (isSelected) {
+                      backgroundColor = "red";
+                    }
+                  }
+
+                  return (
+                    <TouchableOpacity
+                      key={ansIndex}
+                      onPress={() => handleAnswer(answer)}
+                      style={{
+                        backgroundColor,
+                        padding: 10,
+                        marginVertical: 5,
+                        borderRadius: 5,
+                        opacity: answerSubmitted ? 0.7 : 1,
+                      }}
+                      disabled={answerSubmitted}
+                    >
+                      <Text style={{ color: "white" }}>{answer}</Text>
+                    </TouchableOpacity>
+                  );
+                }
+              )}
           </View>
         )}
 
