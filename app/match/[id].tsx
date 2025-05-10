@@ -68,7 +68,7 @@ export default function MatchScreen() {
             setQuestions([]);
             setCurrentQuestionIndex(0);
             setCategory(null);
-            setSelecting_Category(false);
+            setSelectingCategory(false);
             setShowStartButton(false);
             setShowQuestions(false);
           } else if (isMyTurn) {
