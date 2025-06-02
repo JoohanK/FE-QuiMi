@@ -436,7 +436,7 @@ export default function MatchScreen() {
   if (gameData.matchStatus === "completed") {
     return (
       <>
-        <BackButton style={{ marginLeft: 0 }} onPress={onPress}></BackButton>
+        <BackButton onPress={onPress}></BackButton>
         <View
           style={{
             padding: 20,

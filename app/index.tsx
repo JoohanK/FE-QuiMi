@@ -1,6 +1,6 @@
 // index.tsx
 import React, { useEffect, useContext } from "react";
-import { Text, Button, View } from "react-native";
+import { Text, Button, View, StyleSheet } from "react-native";
 import { Redirect, useRouter } from "expo-router";
 import { AuthContext } from "../context/AuthContext";
 import { auth } from "../firebaseConfig";

@@ -8,7 +8,9 @@ import BackButton from "@/components/BackButton";
 export default function MatchLayout() {
   return (
     <>
-      <HeaderComponent title="Match"></HeaderComponent>
+      <HeaderComponent
+        image={require("../../assets/img/imageMatch.png")}
+      ></HeaderComponent>
 
       <Slot />
     </>

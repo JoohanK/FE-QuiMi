@@ -16,19 +16,21 @@ import {
   doc,
   deleteDoc,
   addDoc,
+  getDocs,
 } from "firebase/firestore";
 import { auth, db } from "../firebaseConfig";
 import { profileFromId } from "@/utils/profileFromId";
 import { useRouter } from "expo-router";
 import TitleComponent from "./TitleComponent";
 import ContainerComponent from "./ContainerComponent";
-import { Friend, FriendWithProfile } from "@/types/types";
+import { Friend, FriendWithProfile, Game } from "@/types/types";
 
 const ChallengeFriendList = () => {
   const [friendsWithProfiles, setFriendsWithProfiles] = useState<
     FriendWithProfile[]
   >([]);
   const router = useRouter();
+  const [activeGames, setActiveGames] = useState<Game[]>([]);
 
   useEffect(() => {
     const friendsRef = collection(db, "friends");
@@ -89,20 +91,67 @@ const ChallengeFriendList = () => {
     };
   }, []);
 
+  useEffect(() => {
+    const fetchActiveGames = async () => {
+      if (!auth.currentUser) return;
+      const gamesRef = collection(db, "games");
+      const q = query(
+        gamesRef,
+        where("matchStatus", "==", "in progress"),
+        where("player1Id", "==", auth.currentUser.uid)
+      );
+      const q2 = query(
+        gamesRef,
+        where("matchStatus", "==", "in progress"),
+        where("player2Id", "==", auth.currentUser.uid)
+      );
+
+      const snapshot1 = await getDocs(q);
+      const snapshot2 = await getDocs(q2);
+
+      const games: Game[] = [];
+      snapshot1.forEach((doc) => {
+        games.push({ id: doc.id, ...doc.data() } as Game);
+      });
+      snapshot2.forEach((doc) => {
+        games.push({ id: doc.id, ...doc.data() } as Game);
+      });
+      setActiveGames(games);
+    };
+
+    fetchActiveGames();
+  }, []);
+
+  const hasActiveGameWith = (friendUserId: string): boolean => {
+    return activeGames.some(
+      (game) =>
+        (game.player1Id === auth.currentUser?.uid &&
+          game.player2Id === friendUserId) ||
+        (game.player1Id === friendUserId &&
+          game.player2Id === auth.currentUser?.uid)
+    );
+  };
+
   const handleChallengeFriend = async (friend: FriendWithProfile) => {
-    console.log("Friend pressed", friend);
     try {
       if (!auth.currentUser) {
         console.error("User not authenticated");
         return;
       }
-      const gamesRef = collection(db, "games");
 
-      // Determine the friend's userId based on who initiated the friendship
       const friendUserId =
         friend.userId1 === auth.currentUser.uid
           ? friend.userId2
           : friend.userId1;
+
+      if (hasActiveGameWith(friendUserId)) {
+        alert(
+          `You already have an active game with ${friend.profile?.displayName}.`
+        );
+        return;
+      }
+
+      const gamesRef = collection(db, "games");
 
       const newGame = {
         player1Id: auth.currentUser.uid,
@@ -176,24 +225,27 @@ const ChallengeFriendList = () => {
 
 const styles = StyleSheet.create({
   itemContainer: {
+    backgroundColor: "white",
     flexDirection: "row",
     minWidth: "100%",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: "#ccc",
+    padding: 20,
+    borderRadius: 5,
+    borderWidth: 2,
+    marginTop: 10,
   },
   profileContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "white",
   },
   profileEmoji: {
     fontSize: 30,
     marginRight: 10,
   },
-  profileName: {},
+  profileName: {
+    fontSize: 15,
+  },
   deleteButton: {
     padding: 5,
     borderRadius: 5,

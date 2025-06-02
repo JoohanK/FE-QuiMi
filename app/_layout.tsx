@@ -1,7 +1,7 @@
 import { Slot } from "expo-router";
 import { AuthProvider, AuthContext } from "../context/AuthContext";
 import KeyboardDismissWrapper from "../components/KeyboardDismissWrapper";
-import { StatusBar, Appearance } from "react-native";
+import { StatusBar, Appearance, View, StyleSheet } from "react-native";
 import { auth } from "../firebaseConfig";
 import { onAuthStateChanged } from "firebase/auth";
 import React, { useEffect, useContext, useState } from "react";

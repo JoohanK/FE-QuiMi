@@ -1,6 +1,13 @@
 // components/FriendList.tsx
 import React, { useState, useEffect } from "react";
-import { View, Text, FlatList, StyleSheet, Pressable } from "react-native";
+import {
+  View,
+  Text,
+  FlatList,
+  StyleSheet,
+  Pressable,
+  Alert,
+} from "react-native";
 import {
   collection,
   query,
@@ -9,14 +16,14 @@ import {
   doc,
   deleteDoc,
   addDoc,
+  getDocs,
 } from "firebase/firestore";
 import { useRouter } from "expo-router";
 import { auth, db } from "../firebaseConfig";
 import { profileFromId } from "@/utils/profileFromId";
 import TitleComponent from "./TitleComponent";
 import ContainerComponent from "./ContainerComponent";
-import { Friend, FriendWithProfile } from "@/types/types";
-import { Alert } from "react-native";
+import { Friend, FriendWithProfile, Game } from "@/types/types";
 import ButtonComponent from "./ButtonComponent";
 
 const FriendList = () => {
@@ -24,9 +31,51 @@ const FriendList = () => {
     FriendWithProfile[]
   >([]);
   const router = useRouter();
+  const [activeGames, setActiveGames] = useState<Game[]>([]);
 
   const handleFriendPress = (friendId: string) => {
     router.push(`/friend/${friendId}`);
+  };
+
+  useEffect(() => {
+    const fetchActiveGames = async () => {
+      if (!auth.currentUser) return;
+      const gamesRef = collection(db, "games");
+      const q1 = query(
+        gamesRef,
+        where("matchStatus", "==", "in progress"),
+        where("player1Id", "==", auth.currentUser.uid)
+      );
+      const q2 = query(
+        gamesRef,
+        where("matchStatus", "==", "in progress"),
+        where("player2Id", "==", auth.currentUser.uid)
+      );
+
+      const snapshot1 = await getDocs(q1);
+      const snapshot2 = await getDocs(q2);
+
+      const games: Game[] = [];
+      snapshot1.forEach((doc) => {
+        games.push({ id: doc.id, ...doc.data() } as Game);
+      });
+      snapshot2.forEach((doc) => {
+        games.push({ id: doc.id, ...doc.data() } as Game);
+      });
+      setActiveGames(games);
+    };
+
+    fetchActiveGames();
+  }, []);
+
+  const hasActiveGameWith = (friendUserId: string): boolean => {
+    return activeGames.some(
+      (game) =>
+        (game.player1Id === auth.currentUser?.uid &&
+          game.player2Id === friendUserId) ||
+        (game.player1Id === friendUserId &&
+          game.player2Id === auth.currentUser?.uid)
+    );
   };
 
   const handleChallengeFriend = async (friend: FriendWithProfile) => {
@@ -36,19 +85,27 @@ const FriendList = () => {
       },
       {
         text: "Challenge",
-
         onPress: async () => {
           try {
             if (!auth.currentUser) {
               console.error("User not authenticated");
               return;
             }
-            const gamesRef = collection(db, "games");
 
             const friendUserId =
               friend.userId1 === auth.currentUser.uid
                 ? friend.userId2
                 : friend.userId1;
+
+            if (hasActiveGameWith(friendUserId)) {
+              Alert.alert(
+                "Active Game",
+                `You already have an active game with ${friend.profile?.displayName}.`
+              );
+              return;
+            }
+
+            const gamesRef = collection(db, "games");
 
             const newGame = {
               player1Id: auth.currentUser.uid,
@@ -83,7 +140,7 @@ const FriendList = () => {
               player1Score: 0,
               player2Score: 0,
               matchStatus: "in progress",
-              createdAt: new Date().toISOString(), // Använd ISO-sträng för konsistens
+              createdAt: new Date().toISOString(),
             };
             const newGameDoc = await addDoc(gamesRef, newGame);
 
@@ -196,12 +253,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     minWidth: "100%",
     justifyContent: "space-between",
-
     backgroundColor: "white",
     borderWidth: 2,
     borderRadius: 5,
     padding: 10,
     marginTop: 10,
+    alignItems: "center",
   },
   profileContainer: {
     flexDirection: "row",

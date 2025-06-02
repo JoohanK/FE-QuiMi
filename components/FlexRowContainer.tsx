@@ -4,7 +4,7 @@ import { View, StyleSheet } from "react-native";
 
 interface FlexRowContainerProps {
   children: ReactNode;
-  style?: any; // Du kan använda mer specifika typdefinitioner för style om du vill
+  style?: any;
 }
 
 const FlexRowContainer: React.FC<FlexRowContainerProps> = ({

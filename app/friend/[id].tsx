@@ -23,7 +23,7 @@ interface Game {
   player2Score: number;
   matchStatus: string;
   createdAt: string;
-  completedAt?: string; // Nytt valfritt fält för avslutningstid
+  completedAt?: string;
 }
 
 interface GameResult {
@@ -90,7 +90,7 @@ export default function FriendDetail() {
       where("player1Id", "==", currentUserId),
       where("player2Id", "==", friendId),
       where("matchStatus", "==", "completed"),
-      orderBy("completedAt", "desc"), // Sortera efter completedAt istället för createdAt
+      orderBy("completedAt", "desc"),
       limit(10)
     );
 
@@ -99,7 +99,7 @@ export default function FriendDetail() {
       where("player1Id", "==", friendId),
       where("player2Id", "==", currentUserId),
       where("matchStatus", "==", "completed"),
-      orderBy("completedAt", "desc"), // Sortera efter completedAt
+      orderBy("completedAt", "desc"),
       limit(10)
     );
 
@@ -108,13 +108,13 @@ export default function FriendDetail() {
 
     const combineGames = () => {
       const allGames = [...gamesFromQ1, ...gamesFromQ2];
-      // Sortera efter completedAt i fallande ordning (nyaste först)
+
       allGames.sort((a, b) => {
-        const dateA = new Date(a.completedAt || a.createdAt).getTime(); // Fallback till createdAt om completedAt saknas
+        const dateA = new Date(a.completedAt || a.createdAt).getTime();
         const dateB = new Date(b.completedAt || b.createdAt).getTime();
-        return dateB - dateA; // Nyaste matchen först
+        return dateB - dateA;
       });
-      // Ta de 10 senaste matcherna
+
       const recentGames = allGames.slice(0, 10);
       setGames(recentGames);
     };

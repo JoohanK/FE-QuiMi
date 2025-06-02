@@ -10,6 +10,7 @@ import HeaderComponent from "../../components/HeaderComponent";
 import ContainerComponent from "@/components/ContainerComponent";
 import AddFriend from "./add-friend";
 import { View } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 
 const Tab = createBottomTabNavigator();
 
@@ -36,7 +37,8 @@ export default function MenuLayout() {
 
   return (
     <>
-      <HeaderComponent title="QuiMi" />
+      <HeaderComponent image={require("../../assets/img/image.png")} />
+
       <Tab.Navigator
         screenOptions={({ route }) => ({
           headerShown: false,
@@ -57,7 +59,15 @@ export default function MenuLayout() {
           },
           tabBarActiveTintColor: "tomato",
           tabBarInactiveTintColor: "gray",
-          tabBarStyle: { height: 120 },
+          tabBarStyle: { height: 100, backgroundColor: "transparent" }, // Gör bakgrunden transparent
+          tabBarBackground: () => (
+            <LinearGradient
+              colors={["#FFFFE0", "#FFD700"]}
+              style={{ flex: 1 }}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+            />
+          ),
         })}
       >
         <Tab.Screen name="play" component={Play} options={{ title: "Play" }} />

@@ -54,7 +54,7 @@ const StartCard: React.FC<StartCardProps> = ({
 const styles = StyleSheet.create({
   card: {
     borderRadius: 16,
-    marginVertical: 12,
+
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.2,

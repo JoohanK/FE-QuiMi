@@ -7,7 +7,8 @@ import Register from "./register";
 import ResetPassword from "./reset-password";
 import { Ionicons } from "@expo/vector-icons";
 import HeaderComponent from "../../components/HeaderComponent";
-import { SafeAreaView } from "react-native"; // Import SafeAreaView
+import { SafeAreaView } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 
 const Tab = createBottomTabNavigator();
 
@@ -23,7 +24,7 @@ type IoniconsName =
 export default function Layout() {
   return (
     <>
-      <HeaderComponent title="QuiMi" />
+      <HeaderComponent image={require("../../assets/img/image.png")} />
       <Tab.Navigator
         screenOptions={({ route }) => ({
           headerShown: false,
@@ -42,6 +43,15 @@ export default function Layout() {
           },
           tabBarActiveTintColor: "tomato",
           tabBarInactiveTintColor: "gray",
+          tabBarStyle: { height: 100, backgroundColor: "transparent" }, // Gör bakgrunden transparent
+          tabBarBackground: () => (
+            <LinearGradient
+              colors={["#FFFFE0", "#FFD700"]} // Ljusare gul till mörkare gul
+              style={{ flex: 1 }}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+            />
+          ),
         })}
       >
         <Tab.Screen
