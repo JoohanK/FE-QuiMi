@@ -27,6 +27,7 @@ const TitleComponent: React.FC<TitleComponentProps> = ({
 const styles = StyleSheet.create({
   title: {
     justifyContent: "center",
+    alignSelf: "center",
     fontSize: 24,
     fontWeight: "bold",
     marginBottom: 20,

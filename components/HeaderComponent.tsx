@@ -35,7 +35,7 @@ const styles = StyleSheet.create({
     borderBottomColor: "#ccc",
   },
   title: {
-    fontSize: 20,
+    fontSize: 30,
     fontWeight: "bold",
   },
 });

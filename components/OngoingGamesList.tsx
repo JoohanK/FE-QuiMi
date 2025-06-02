@@ -111,8 +111,9 @@ export default function OngoingGamesList() {
                   onPress={() => handleResumeGame(item.id)}
                   style={{
                     minWidth: "100%",
-                    padding: 10,
-                    borderWidth: 3,
+                    backgroundColor: "white",
+                    padding: 20,
+                    borderWidth: 2,
                     borderColor:
                       item.turn === currentUser?.uid ? "green" : "orange",
                     borderRadius: 5,

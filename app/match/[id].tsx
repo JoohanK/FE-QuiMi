@@ -17,6 +17,9 @@ import he from "he";
 import QuestionCard from "@/components/QuestionCard";
 import TitleComponent from "@/components/TitleComponent";
 import IsLoading from "@/components/IsLoading";
+import StartCard from "@/components/StartCard";
+import ContainerComponent from "@/components/ContainerComponent";
+import CenterContainer from "@/components/CenterContainer";
 
 export default function MatchScreen() {
   const { id } = useLocalSearchParams();
@@ -465,112 +468,126 @@ export default function MatchScreen() {
   }
 
   return (
-    <View style={{ padding: 20, flex: 1 }}>
-      {isMyTurn && showStartButton && !isLoading && (
-        <>
-          <BackButton style={{ marginLeft: 0 }} onPress={onPress}></BackButton>
-          <ButtonComponent
-            onPress={handleStartTurn}
-            title={
-              isRoundStarter && !gameData?.rounds?.[currentRound]?.categoryId
-                ? ("Start round " + (currentRound + 1)).toUpperCase()
-                : "Play your turn"
-            }
-          />
-        </>
-      )}
-
-      {selectingCategory && isMyTurn && isRoundStarter && !showStartButton && (
-        <View style={{ marginTop: 20 }}>
-          <Text style={{ fontSize: 18 }}>Choose Category:</Text>
-          {availableCategories.map((cat) => (
-            <TouchableOpacity
-              key={cat.id}
-              onPress={() => handleCategorySelection(cat)}
-              style={{
-                padding: 10,
-                backgroundColor: cat.color || "lightgray",
-                marginVertical: 5,
-                borderRadius: 5,
-              }}
-            >
-              <Text>{cat.name}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      )}
-      {isLoading && (
-        <IsLoading
-          message="Fetching questions..."
-          size="large"
-          color="#1E90FF"
-        />
-      )}
-
-      {showQuestions &&
-        questions.length > 0 &&
-        isMyTurn &&
-        !selectingCategory &&
-        !showStartButton &&
-        currentQuestionIndex < questions.length && ( // Lägg till denna kontroll
-          <View style={{ marginTop: 20 }}>
-            <TouchableOpacity
-              onPress={handleNextQuestion}
-              disabled={!answerSubmitted}
-            >
-              <QuestionCard
-                category={category}
-                questionNumber={currentQuestionIndex + 1}
-                question={questions[currentQuestionIndex]?.question || ""}
-                color={
-                  categoriesData.categories.find((cat) => cat.name === category)
-                    ?.color
-                }
-              />
-            </TouchableOpacity>
-            {!isTransitioning &&
-              questions[currentQuestionIndex]?.allAnswers?.map(
-                (answer: string, ansIndex: number) => {
-                  const isCorrect =
-                    answer === questions[currentQuestionIndex].correctAnswer;
-                  const isSelected = answer === selectedAnswer;
-                  let backgroundColor = "lightblue";
-
-                  if (answerSubmitted) {
-                    if (isCorrect) {
-                      backgroundColor = "green";
-                    } else if (isSelected) {
-                      backgroundColor = "red";
-                    }
-                  }
-
-                  return (
-                    <TouchableOpacity
-                      key={ansIndex}
-                      onPress={() => handleAnswer(answer)}
-                      style={{
-                        backgroundColor,
-                        padding: 10,
-                        marginVertical: 5,
-                        borderRadius: 5,
-                        opacity: answerSubmitted ? 0.7 : 1,
-                      }}
-                      disabled={answerSubmitted}
-                    >
-                      <Text style={{ color: "white" }}>{answer}</Text>
-                    </TouchableOpacity>
-                  );
-                }
-              )}
-          </View>
+    <>
+      <BackButton style={{ top: 1, left: 1 }} onPress={onPress} />
+      <View style={{ padding: 20, flex: 1 }}>
+        {isMyTurn && showStartButton && !isLoading && (
+          <>
+            <StartCard
+              onPress={handleStartTurn}
+              title={
+                isRoundStarter && !gameData?.rounds?.[currentRound]?.categoryId
+                  ? ("Start round " + (currentRound + 1)).toUpperCase()
+                  : "Play your turn"
+              }
+            />
+          </>
         )}
 
-      {!isMyTurn && (
-        <>
-          <BackButton style={{ marginLeft: 0 }} onPress={onPress}></BackButton>
-          <Text style={{ marginTop: 20 }}>Opponent's turn..</Text>
-        </>
-      )}
-    </View>
+        {selectingCategory &&
+          isMyTurn &&
+          isRoundStarter &&
+          !showStartButton && (
+            <View style={{ marginTop: 20 }}>
+              <TitleComponent style={{ fontSize: 35 }}>
+                Choose Category
+              </TitleComponent>
+
+              {availableCategories.map((cat) => (
+                <TouchableOpacity
+                  key={cat.id}
+                  onPress={() => handleCategorySelection(cat)}
+                  style={{
+                    padding: 20,
+                    backgroundColor: cat.color || "lightgray",
+                    marginVertical: 5,
+                    borderRadius: 5,
+                    borderWidth: 2,
+                  }}
+                >
+                  <Text>{cat.name}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+        {isLoading && (
+          <IsLoading
+            message="Fetching questions..."
+            size="large"
+            color="#1E90FF"
+          />
+        )}
+
+        {showQuestions &&
+          questions.length > 0 &&
+          isMyTurn &&
+          !selectingCategory &&
+          !showStartButton &&
+          currentQuestionIndex < questions.length && (
+            <View style={{ marginTop: 20 }}>
+              <TouchableOpacity
+                onPress={handleNextQuestion}
+                disabled={!answerSubmitted}
+              >
+                <QuestionCard
+                  category={category}
+                  questionNumber={currentQuestionIndex + 1}
+                  question={questions[currentQuestionIndex]?.question || ""}
+                  color={
+                    categoriesData.categories.find(
+                      (cat) => cat.name === category
+                    )?.color
+                  }
+                />
+              </TouchableOpacity>
+              {!isTransitioning &&
+                questions[currentQuestionIndex]?.allAnswers?.map(
+                  (answer: string, ansIndex: number) => {
+                    const isCorrect =
+                      answer === questions[currentQuestionIndex].correctAnswer;
+                    const isSelected = answer === selectedAnswer;
+                    let backgroundColor = "purple";
+
+                    if (answerSubmitted) {
+                      if (isCorrect) {
+                        backgroundColor = "green";
+                      } else if (isSelected) {
+                        backgroundColor = "red";
+                      }
+                    }
+
+                    return (
+                      <TouchableOpacity
+                        key={ansIndex}
+                        onPress={() => handleAnswer(answer)}
+                        style={{
+                          backgroundColor,
+                          padding: 10,
+                          marginVertical: 5,
+                          borderRadius: 5,
+                          borderWidth: 2,
+                          opacity: answerSubmitted ? 0.7 : 1,
+                        }}
+                        disabled={answerSubmitted}
+                      >
+                        <Text style={{ color: "white" }}>{answer}</Text>
+                      </TouchableOpacity>
+                    );
+                  }
+                )}
+            </View>
+          )}
+
+        {!isMyTurn && (
+          <>
+            <StartCard
+              title="Opponent's turn.."
+              onPress={onPress}
+              subtitle="Go back"
+            ></StartCard>
+          </>
+        )}
+      </View>
+    </>
   );
 }

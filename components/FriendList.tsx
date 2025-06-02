@@ -196,10 +196,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     minWidth: "100%",
     justifyContent: "space-between",
-    paddingTop: 10,
-    paddingBottom: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: "#ccc",
+
+    backgroundColor: "white",
+    borderWidth: 2,
+    borderRadius: 5,
+    padding: 10,
+    marginTop: 10,
   },
   profileContainer: {
     flexDirection: "row",
@@ -210,7 +212,7 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   profileName: {
-    fontSize: 20,
+    fontSize: 15,
   },
 });
 

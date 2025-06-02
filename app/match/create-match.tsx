@@ -23,8 +23,7 @@ export default function Match() {
       {mode === "challenge" ? (
         <ContainerComponent>
           <TitleComponent>Challenge friend</TitleComponent>
-          <Text>Match Screen</Text>
-          <Text>Mode: {mode}</Text>
+
           <ChallengeFriendList />
         </ContainerComponent>
       ) : (

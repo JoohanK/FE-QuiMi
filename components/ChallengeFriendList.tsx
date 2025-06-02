@@ -187,6 +187,7 @@ const styles = StyleSheet.create({
   profileContainer: {
     flexDirection: "row",
     alignItems: "center",
+    backgroundColor: "white",
   },
   profileEmoji: {
     fontSize: 30,

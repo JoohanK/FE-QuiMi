@@ -201,10 +201,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     padding: 10,
-    borderBottomWidth: 1,
+    borderWidth: 2,
     borderRadius: 5,
     marginVertical: 5,
-    borderBottomColor: "#ccc",
+    backgroundColor: "white",
   },
   profileEmoji: {
     fontSize: 30,
