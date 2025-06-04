@@ -6,6 +6,7 @@ import { auth, db } from "@/firebaseConfig"; // Ensure auth is imported
 import HeaderComponent from "@/components/HeaderComponent";
 import BackButton from "@/components/BackButton";
 import DeleteButton from "@/components/DeleteButton";
+import { LinearGradient } from "expo-linear-gradient";
 
 export default function FriendLayout() {
   const router = useRouter();
@@ -55,12 +56,22 @@ export default function FriendLayout() {
 
   return (
     <>
-      <HeaderComponent title="Friend Profile" />
-      <View style={styles.container}>
-        <BackButton onPress={onPress} />
-        <DeleteButton onPress={handleDeleteFriend} />
+      <View style={{ flex: 1, backgroundColor: "#FFFFE0" }}>
+        <HeaderComponent image={require("../../assets/img/imageFriend.png")} />
+        <View style={styles.container}>
+          <BackButton onPress={onPress} />
+          <DeleteButton onPress={handleDeleteFriend} />
+        </View>
+        <Slot />
+        <View style={styles.bottomBar}>
+          <LinearGradient
+            colors={["#FFFFE0", "#FFD700"]}
+            style={styles.gradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+          />
+        </View>
       </View>
-      <Slot />
     </>
   );
 }
@@ -72,5 +83,15 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: 10,
     marginTop: 10,
+  },
+  bottomBar: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 100,
+  },
+  gradient: {
+    flex: 1,
   },
 });

@@ -29,14 +29,16 @@ export default function ResetPassword() {
   };
 
   return (
-    <ContainerComponent>
-      <TitleComponent>Reset password</TitleComponent>
-      <InputComponent
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-      />
-      <ButtonComponent title="Reset password" onPress={handleResetPassword} />
-    </ContainerComponent>
+    <View style={{ flex: 1, backgroundColor: "#FFFFE0" }}>
+      <ContainerComponent>
+        <TitleComponent>Reset password</TitleComponent>
+        <InputComponent
+          placeholder="Email"
+          value={email}
+          onChangeText={setEmail}
+        />
+        <ButtonComponent title="Reset password" onPress={handleResetPassword} />
+      </ContainerComponent>
+    </View>
   );
 }

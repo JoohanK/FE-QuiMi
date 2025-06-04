@@ -35,8 +35,10 @@ const StartCard: React.FC<StartCardProps> = ({
       activeOpacity={0.85}
     >
       <LinearGradient
-        colors={disabled ? ["#d1d1d1", "#e0e0e0"] : ["#f5f5f5", "#e8e8e8"]}
+        colors={disabled ? ["#CFD8DC", "#ECEFF1"] : ["#BBDEFB", "#E3F2FD"]}
         style={styles.gradient}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
       >
         <Text
           style={[styles.title, textStyle, disabled && styles.disabledText]}
@@ -54,13 +56,12 @@ const StartCard: React.FC<StartCardProps> = ({
 const styles = StyleSheet.create({
   card: {
     borderRadius: 16,
-
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
     elevation: 10,
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: "black",
     overflow: "hidden",
     width: "90%",

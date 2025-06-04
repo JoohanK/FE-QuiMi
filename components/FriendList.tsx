@@ -254,7 +254,7 @@ const styles = StyleSheet.create({
     minWidth: "100%",
     justifyContent: "space-between",
     backgroundColor: "white",
-    borderWidth: 2,
+    borderWidth: 1,
     borderRadius: 5,
     padding: 10,
     marginTop: 10,

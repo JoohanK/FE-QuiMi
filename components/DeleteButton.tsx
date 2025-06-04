@@ -1,27 +1,32 @@
 import React from "react";
-import { TouchableOpacity, Text, StyleSheet, ViewStyle } from "react-native";
+import { TouchableOpacity, StyleSheet, ViewStyle } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 
 interface DeleteButtonProps {
   onPress: () => void;
   style?: ViewStyle;
 }
 
-const BackButton: React.FC<DeleteButtonProps> = ({ onPress, style }) => {
+const DeleteButton: React.FC<DeleteButtonProps> = ({ onPress, style }) => {
   return (
     <TouchableOpacity style={[styles.button, style]} onPress={onPress}>
-      <Text style={styles.text}>❌</Text>
+      <Ionicons name="close" size={60} color="#EC6265" />
     </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
   button: {
-    padding: 0,
-    margin: 10,
+    borderRadius: 8,
+    margin: 8,
+    overflow: "hidden",
   },
-  text: {
-    fontSize: 40,
+  gradient: {
+    padding: 10,
+    alignItems: "center",
+    justifyContent: "center",
   },
 });
 
-export default BackButton;
+export default DeleteButton;

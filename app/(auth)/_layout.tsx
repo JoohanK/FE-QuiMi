@@ -7,7 +7,7 @@ import Register from "./register";
 import ResetPassword from "./reset-password";
 import { Ionicons } from "@expo/vector-icons";
 import HeaderComponent from "../../components/HeaderComponent";
-import { SafeAreaView } from "react-native";
+import { SafeAreaView, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 
 const Tab = createBottomTabNavigator();

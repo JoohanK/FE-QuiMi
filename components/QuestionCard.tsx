@@ -33,7 +33,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 5,
     elevation: 3,
-    borderWidth: 2,
+    borderWidth: 1,
   },
   category: {
     fontSize: 20,

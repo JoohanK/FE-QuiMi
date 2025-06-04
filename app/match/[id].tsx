@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, ActivityIndicator } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ActivityIndicator,
+  StyleSheet,
+} from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import categoriesData from "@/assets/json/categories.json";
 import { db, auth } from "@/firebaseConfig";
@@ -20,6 +26,8 @@ import IsLoading from "@/components/IsLoading";
 import StartCard from "@/components/StartCard";
 import ContainerComponent from "@/components/ContainerComponent";
 import CenterContainer from "@/components/CenterContainer";
+import { profileFromId } from "@/utils/profileFromId";
+import { UserProfile } from "@/types/types";
 
 export default function MatchScreen() {
   const { id } = useLocalSearchParams();
@@ -38,6 +46,12 @@ export default function MatchScreen() {
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [answerSubmitted, setAnswerSubmitted] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [player1Profile, setPlayer1Profile] = useState<UserProfile | null>(
+    null
+  );
+  const [player2Profile, setPlayer2Profile] = useState<UserProfile | null>(
+    null
+  );
 
   const isPlayer1 = auth.currentUser?.uid === gameData?.player1Id;
   const isMyTurn = auth.currentUser?.uid === gameData?.turn;
@@ -51,7 +65,7 @@ export default function MatchScreen() {
     const gameRef = doc(db, "games", id as string);
     const unsubscribe = onSnapshot(
       gameRef,
-      (snapshot) => {
+      async (snapshot) => {
         const data = snapshot.data();
         if (data) {
           setGameData(data);
@@ -74,6 +88,10 @@ export default function MatchScreen() {
             setSelectingCategory(false);
             setShowStartButton(false);
             setShowQuestions(false);
+            const p1Profile = await profileFromId(data.player1Id);
+            const p2Profile = await profileFromId(data.player2Id);
+            setPlayer1Profile(p1Profile);
+            setPlayer2Profile(p2Profile);
           } else if (isMyTurn) {
             if (hasQuestions && (p1AnswersLength < 3 || p2AnswersLength < 3)) {
               if (
@@ -434,34 +452,29 @@ export default function MatchScreen() {
   }
 
   if (gameData.matchStatus === "completed") {
+    const player1Name = player1Profile?.displayName || "Player 1";
+    const player2Name = player2Profile?.displayName || "Player 2";
+
     return (
       <>
-        <BackButton onPress={onPress}></BackButton>
-        <View
-          style={{
-            padding: 20,
-            alignItems: "center",
-            justifyContent: "center",
-            flex: 1,
-          }}
-        >
-          <Text style={{ fontSize: 32, fontWeight: "bold", marginBottom: 20 }}>
-            Game Over!
-          </Text>
-          <Text style={{ fontSize: 20 }}>
-            Player 1 Score: {gameData.player1Score}
-          </Text>
-          <Text style={{ fontSize: 20, marginBottom: 20 }}>
-            Player 2 Score: {gameData.player2Score}
-          </Text>
-          <Text style={{ fontSize: 24, fontWeight: "bold", marginBottom: 20 }}>
-            {gameData.player1Score > gameData.player2Score
-              ? "Player 1 Wins!"
-              : gameData.player2Score > gameData.player1Score
-              ? "Player 2 Wins!"
-              : "It's a Tie!"}
-          </Text>
-          <ButtonComponent title="Play Again" onPress={handlePlayAgain} />
+        <BackButton onPress={onPress} />
+        <View style={styles.container}>
+          <View style={styles.card}>
+            <Text style={styles.winnerText}>
+              {gameData.player1Score > gameData.player2Score
+                ? `${player1Name} Wins! 🏆`
+                : gameData.player2Score > gameData.player1Score
+                ? `${player2Name} Wins! 🏆`
+                : "It's a Tie! 🤝"}
+            </Text>
+            <Text style={styles.scoreText}>
+              {player1Name} - {player2Name}
+            </Text>
+            <Text style={styles.scoreValues}>
+              ({gameData.player1Score} - {gameData.player2Score})
+            </Text>
+            <ButtonComponent title="Play Again" onPress={handlePlayAgain} />
+          </View>
         </View>
       </>
     );
@@ -470,7 +483,7 @@ export default function MatchScreen() {
   return (
     <>
       <BackButton style={{ top: 1, left: 1 }} onPress={onPress} />
-      <View style={{ padding: 20, flex: 1 }}>
+      <View style={{ padding: 20, flex: 1, backgroundColor: "#FFFFE0" }}>
         {isMyTurn && showStartButton && !isLoading && (
           <>
             <StartCard
@@ -478,7 +491,10 @@ export default function MatchScreen() {
               title={
                 isRoundStarter && !gameData?.rounds?.[currentRound]?.categoryId
                   ? ("Start round " + (currentRound + 1)).toUpperCase()
-                  : "Play your turn"
+                  : (
+                      "Play your turn on round" +
+                      (currentRound + 1)
+                    ).toUpperCase()
               }
             />
           </>
@@ -502,7 +518,7 @@ export default function MatchScreen() {
                     backgroundColor: cat.color || "lightgray",
                     marginVertical: 5,
                     borderRadius: 5,
-                    borderWidth: 2,
+                    borderWidth: 1,
                   }}
                 >
                   <Text>{cat.name}</Text>
@@ -546,7 +562,7 @@ export default function MatchScreen() {
                     const isCorrect =
                       answer === questions[currentQuestionIndex].correctAnswer;
                     const isSelected = answer === selectedAnswer;
-                    let backgroundColor = "purple";
+                    let backgroundColor = "#A958FF";
 
                     if (answerSubmitted) {
                       if (isCorrect) {
@@ -565,7 +581,7 @@ export default function MatchScreen() {
                           padding: 10,
                           marginVertical: 5,
                           borderRadius: 5,
-                          borderWidth: 2,
+                          borderWidth: 1,
                           opacity: answerSubmitted ? 0.7 : 1,
                         }}
                         disabled={answerSubmitted}
@@ -591,3 +607,44 @@ export default function MatchScreen() {
     </>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 20,
+    alignItems: "center",
+    backgroundColor: "black",
+  },
+  card: {
+    backgroundColor: "#fff",
+    borderRadius: 15,
+    padding: 25,
+    alignItems: "center",
+    width: "90%",
+    maxWidth: 350,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  winnerText: {
+    fontSize: 26,
+    fontWeight: "bold",
+    color: "#333",
+    marginBottom: 15,
+    textAlign: "center",
+  },
+  scoreText: {
+    fontSize: 20,
+    fontWeight: "600",
+    color: "#555",
+    marginBottom: 5,
+  },
+  scoreValues: {
+    fontSize: 18,
+    fontWeight: "400",
+    color: "#777",
+    marginBottom: 20,
+  },
+});

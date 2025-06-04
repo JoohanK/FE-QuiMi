@@ -232,7 +232,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 20,
     borderRadius: 5,
-    borderWidth: 2,
+    borderWidth: 1,
     marginTop: 10,
   },
   profileContainer: {

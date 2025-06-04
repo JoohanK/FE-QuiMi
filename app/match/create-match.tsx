@@ -19,16 +19,17 @@ export default function Match() {
   return (
     <>
       <BackButton onPress={onPress}></BackButton>
+      <View style={{ flex: 1, backgroundColor: "#FFFFE0" }}>
+        {mode === "challenge" ? (
+          <ContainerComponent>
+            <TitleComponent>Challenge friend</TitleComponent>
 
-      {mode === "challenge" ? (
-        <ContainerComponent>
-          <TitleComponent>Challenge friend</TitleComponent>
-
-          <ChallengeFriendList />
-        </ContainerComponent>
-      ) : (
-        <Text>Solo</Text>
-      )}
+            <ChallengeFriendList />
+          </ContainerComponent>
+        ) : (
+          <Text>Solo</Text>
+        )}
+      </View>
     </>
   );
 }

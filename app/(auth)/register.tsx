@@ -1,5 +1,5 @@
 import React, { useState, useContext } from "react";
-import { StyleSheet } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { auth, db } from "../../firebaseConfig";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth"; // Lägg till updateProfile
 import { useRouter } from "expo-router";
@@ -27,14 +27,12 @@ export default function Register() {
         password
       );
       const user = userCredential.user;
-      const emailUsername = email.split("@")[0]; // Ta bara delen före @
+      const emailUsername = email.split("@")[0];
 
-      // Sätt displayName i Firebase Auth
       await updateProfile(user, {
         displayName: emailUsername,
       });
 
-      // Spara användardata i Firestore
       await setDoc(doc(db, "users", user.uid), {
         displayName: emailUsername,
         email: user.email,
@@ -51,28 +49,30 @@ export default function Register() {
   };
 
   return (
-    <ContainerComponent>
-      <TitleComponent>Register</TitleComponent>
-      <InputComponent
-        placeholder="Email"
-        keyboardType="email-address"
-        autoCapitalize="none"
-        onChangeText={setEmail}
-      />
-      <InputComponent
-        placeholder="Password"
-        secureTextEntry
-        onChangeText={setPassword}
-      />
-      <ButtonComponent
-        title="Register"
-        onPress={handleSubmit}
-        style={{ marginBottom: 5 }}
-      />
-      <ButtonComponent
-        title="Already have an account? Sign in"
-        onPress={() => navigation.navigate("login")}
-      />
-    </ContainerComponent>
+    <View style={{ flex: 1, backgroundColor: "#FFFFE0" }}>
+      <ContainerComponent>
+        <TitleComponent>Register</TitleComponent>
+        <InputComponent
+          placeholder="Email"
+          keyboardType="email-address"
+          autoCapitalize="none"
+          onChangeText={setEmail}
+        />
+        <InputComponent
+          placeholder="Password"
+          secureTextEntry
+          onChangeText={setPassword}
+        />
+        <ButtonComponent
+          title="Register"
+          onPress={handleSubmit}
+          style={{ marginBottom: 5 }}
+        />
+        <ButtonComponent
+          title="Already have an account? Sign in"
+          onPress={() => navigation.navigate("login")}
+        />
+      </ContainerComponent>
+    </View>
   );
 }

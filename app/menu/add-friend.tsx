@@ -7,7 +7,9 @@ import AddFriendComponent from "@/components/AddFriendComponent";
 export default function AddFriend() {
   return (
     <>
-      <AddFriendComponent />
+      <View style={{ flex: 1, backgroundColor: "#FFFFE0" }}>
+        <AddFriendComponent />
+      </View>
     </>
   );
 }

@@ -150,7 +150,7 @@ export default function FriendDetail() {
         ? "Victory"
         : myScore === opponentScore
         ? "Draw"
-        : "Lose";
+        : "Lose    ";
     const emoji =
       myScore > opponentScore ? "🏆" : myScore === opponentScore ? "🤝" : "😭";
     const score = `(${myScore} - ${opponentScore})`;

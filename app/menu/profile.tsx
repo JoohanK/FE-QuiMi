@@ -1,5 +1,5 @@
 import React, { useContext, useState, useEffect } from "react";
-import { Text, ActivityIndicator } from "react-native";
+import { Text, ActivityIndicator, View } from "react-native";
 import { useRouter } from "expo-router";
 import { AuthContext } from "../../context/AuthContext";
 import { auth, db } from "../../firebaseConfig";
@@ -134,43 +134,45 @@ export default function Profile() {
 
   return (
     <>
-      <ContainerComponent>
-        <TitleComponent>Customize profile</TitleComponent>
-        <FlexRowContainer>
-          <ProfileEmoji />
-          <DisplayNameComponent />
-        </FlexRowContainer>
-        <Text></Text>
-        {errorMessage ? (
-          <Text style={{ color: "red" }}>{errorMessage}</Text>
-        ) : null}
-        <Text>Choose your display name</Text>
-        <InputComponent
-          placeholder="Name"
-          value={displayName}
-          onChangeText={setDisplayName}
-        />
-        <Text>Choose your Emoji</Text>
-        <EmojiPicker onEmojiSelected={handleEmojiSelected} />
+      <View style={{ flex: 1, backgroundColor: "#FFFFE0" }}>
+        <ContainerComponent>
+          <TitleComponent>Customize profile</TitleComponent>
+          <FlexRowContainer>
+            <ProfileEmoji />
+            <DisplayNameComponent />
+          </FlexRowContainer>
+          <Text></Text>
+          {errorMessage ? (
+            <Text style={{ color: "red" }}>{errorMessage}</Text>
+          ) : null}
+          <Text>Choose your display name</Text>
+          <InputComponent
+            placeholder="Name"
+            value={displayName}
+            onChangeText={setDisplayName}
+          />
+          <Text>Choose your Emoji</Text>
+          <EmojiPicker onEmojiSelected={handleEmojiSelected} />
 
-        {selectedEmoji && (
-          <Text style={{ fontSize: 70, marginTop: 20 }}>{selectedEmoji}</Text>
-        )}
-      </ContainerComponent>
-      <FlexRowContainer style={{ marginBottom: 10 }}>
-        {loading ? (
-          <ActivityIndicator size="large" />
-        ) : (
-          <>
-            <ButtonComponent title="Save" onPress={handleSave} />
-            <ButtonComponent
-              title="Sign out"
-              style={{ backgroundColor: "red" }}
-              onPress={handleSignOut}
-            />
-          </>
-        )}
-      </FlexRowContainer>
+          {selectedEmoji && (
+            <Text style={{ fontSize: 70, marginTop: 20 }}>{selectedEmoji}</Text>
+          )}
+        </ContainerComponent>
+        <FlexRowContainer style={{ marginBottom: 10 }}>
+          {loading ? (
+            <ActivityIndicator size="large" />
+          ) : (
+            <>
+              <ButtonComponent title="Save" onPress={handleSave} />
+              <ButtonComponent
+                title="Sign out"
+                style={{ backgroundColor: "#F24822" }}
+                onPress={handleSignOut}
+              />
+            </>
+          )}
+        </FlexRowContainer>
+      </View>
     </>
   );
 }

@@ -35,20 +35,22 @@ export default function Play() {
 
   return (
     <>
-      <ContainerComponent>
-        <TitleComponent>Play</TitleComponent>
-        <ButtonComponent title="Start New Game" onPress={toggleModal} />
-        <Modal isVisible={isModalVisible} onBackdropPress={toggleModal}>
-          <ContainerComponent style={{ justifyContent: "center", gap: 10 }}>
-            {/*  <ButtonComponent title="Solo" onPress={handleSolo} /> */}
-            <ButtonComponent
-              title="Challenge a Friend"
-              onPress={handleChallenge}
-            />
-          </ContainerComponent>
-        </Modal>
-        <OngoingGamesList />
-      </ContainerComponent>
+      <View style={{ flex: 1, backgroundColor: "#FFFFE0" }}>
+        <ContainerComponent>
+          <TitleComponent>Play</TitleComponent>
+          <ButtonComponent title="Start New Game" onPress={toggleModal} />
+          <Modal isVisible={isModalVisible} onBackdropPress={toggleModal}>
+            <ContainerComponent style={{ justifyContent: "center", gap: 10 }}>
+              {/*  <ButtonComponent title="Solo" onPress={handleSolo} /> */}
+              <ButtonComponent
+                title="Challenge a Friend"
+                onPress={handleChallenge}
+              />
+            </ContainerComponent>
+          </Modal>
+          <OngoingGamesList />
+        </ContainerComponent>
+      </View>
     </>
   );
 }

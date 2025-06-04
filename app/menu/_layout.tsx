@@ -57,9 +57,9 @@ export default function MenuLayout() {
 
             return <Ionicons name={iconName} size={30} color={color} />;
           },
-          tabBarActiveTintColor: "tomato",
+          tabBarActiveTintColor: "navy",
           tabBarInactiveTintColor: "gray",
-          tabBarStyle: { height: 100, backgroundColor: "transparent" }, // Gör bakgrunden transparent
+          tabBarStyle: { height: 100, backgroundColor: "transparent" },
           tabBarBackground: () => (
             <LinearGradient
               colors={["#FFFFE0", "#FFD700"]}

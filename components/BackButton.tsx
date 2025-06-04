@@ -1,5 +1,6 @@
 import React from "react";
-import { TouchableOpacity, Text, StyleSheet, ViewStyle } from "react-native";
+import { TouchableOpacity, StyleSheet, ViewStyle } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 
 interface BackButtonProps {
   onPress: () => void;
@@ -9,18 +10,17 @@ interface BackButtonProps {
 const BackButton: React.FC<BackButtonProps> = ({ onPress, style }) => {
   return (
     <TouchableOpacity style={[styles.button, style]} onPress={onPress}>
-      <Text style={styles.text}>⬅️</Text>
+      <Ionicons name="arrow-back" size={50} color="#333" />
     </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
   button: {
-    padding: 0,
-    margin: 10,
-  },
-  text: {
-    fontSize: 40,
+    padding: 10,
+    backgroundColor: "#FFFFE0",
+    borderRadius: 8,
+    margin: 0,
   },
 });
 

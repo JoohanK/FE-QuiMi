@@ -113,9 +113,9 @@ export default function OngoingGamesList() {
                     minWidth: "100%",
                     backgroundColor: "white",
                     padding: 20,
-                    borderWidth: 2,
+                    borderWidth: 1,
                     borderColor:
-                      item.turn === currentUser?.uid ? "green" : "orange",
+                      item.turn === currentUser?.uid ? "green" : "#F24822",
                     borderRadius: 5,
                     marginVertical: 5,
                     flexDirection: "row",
