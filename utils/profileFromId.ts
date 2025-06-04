@@ -1,4 +1,3 @@
-// utils/profileFromId.ts
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../firebaseConfig";
 import { UserProfile } from "@/types/types";

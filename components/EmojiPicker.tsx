@@ -13,10 +13,9 @@ interface EmojiList {
 const EmojiPicker: React.FC<EmojiPickerProps> = ({ onEmojiSelected }) => {
   const [profileEmojis, setProfileEmojis] = useState<string[]>([]);
 
-  // Hämta skärmbredden för att beräkna emoji-storlek
   const screenWidth = Dimensions.get("window").width;
-  const emojisPerRow = 9; // Antal emojis per rad
-  const emojiContainerWidth = screenWidth / emojisPerRow; // Bredden för varje emoji-container
+  const emojisPerRow = 9;
+  const emojiContainerWidth = screenWidth / emojisPerRow;
 
   useEffect(() => {
     const loadEmojis = async () => {
@@ -44,9 +43,9 @@ const EmojiPicker: React.FC<EmojiPickerProps> = ({ onEmojiSelected }) => {
           key={emoji}
           onPress={() => onEmojiSelected(emoji)}
           style={{
-            width: emojiContainerWidth, // Fast bredd för att passa 6 per rad
-            alignItems: "center", // Centrera emoji horisontellt
-            padding: 5, // Lite padding för att undvika överlappning
+            width: emojiContainerWidth,
+            alignItems: "center",
+            padding: 5,
           }}
         >
           <Text style={{ fontSize: 30 }}>{emoji}</Text>

@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, StyleSheet, Image } from "react-native"; // Added Image
+import { View, Text, StyleSheet, Image } from "react-native";
 import BackButton from "./BackButton";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
@@ -47,8 +47,8 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   titleImage: {
-    width: 150, // Adjust width as needed
-    height: 50, // Adjust height as needed
+    width: 150,
+    height: 50,
   },
 });
 

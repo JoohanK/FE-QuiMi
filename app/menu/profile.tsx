@@ -35,7 +35,6 @@ export default function Profile() {
 
   useEffect(() => {
     if (user) {
-      // Om displayName finns, använd det, annars ta e-postadressen före @
       const emailUsername = user.email ? user.email.split("@")[0] : "";
       setDisplayName(user.displayName || emailUsername);
     }
@@ -119,7 +118,7 @@ export default function Profile() {
             try {
               await signOut(auth);
               setUser(null);
-              router.replace("/login"); // Navigera till inloggningssidan
+              router.replace("/login");
             } catch (error) {
               console.error("Error signing out:", error);
             }

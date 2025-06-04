@@ -9,7 +9,7 @@ import {
 
 interface TitleComponentProps extends Omit<TextProps, "style"> {
   children: React.ReactNode;
-  style?: StyleProp<TextStyle>; // Lägg till möjlighet att styla titeln
+  style?: StyleProp<TextStyle>;
 }
 
 const TitleComponent: React.FC<TitleComponentProps> = ({

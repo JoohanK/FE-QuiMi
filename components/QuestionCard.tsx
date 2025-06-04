@@ -5,7 +5,7 @@ interface QuestionCardProps {
   category: string | null;
   questionNumber: number;
   question: string;
-  color?: string; // Ny prop för färg
+  color?: string;
 }
 
 const QuestionCard: React.FC<QuestionCardProps> = ({

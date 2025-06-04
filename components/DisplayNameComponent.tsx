@@ -1,4 +1,3 @@
-// DisplayNameComponent.tsx
 import React, { useContext } from "react";
 import { Text, StyleSheet } from "react-native";
 import { AuthContext } from "../context/AuthContext";
@@ -6,13 +5,13 @@ import { AuthContext } from "../context/AuthContext";
 interface DisplayNameComponentProps {
   fallback?: string;
   style?: any;
-  size?: number; // Lägg till size prop
+  size?: number;
 }
 
 const DisplayNameComponent: React.FC<DisplayNameComponentProps> = ({
   fallback = "Anonymous",
   style,
-  size = 16, // Standard textstorlek
+  size = 16,
 }) => {
   const { user } = useContext(AuthContext);
 

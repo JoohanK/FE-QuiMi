@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Slot, useRouter, useLocalSearchParams } from "expo-router";
 import { View, StyleSheet, Alert } from "react-native";
 import { doc, deleteDoc, getDoc } from "firebase/firestore";
-import { auth, db } from "@/firebaseConfig"; // Ensure auth is imported
+import { auth, db } from "@/firebaseConfig";
 import HeaderComponent from "@/components/HeaderComponent";
 import BackButton from "@/components/BackButton";
 import DeleteButton from "@/components/DeleteButton";

@@ -8,23 +8,22 @@ import {
 } from "react-native";
 
 interface IsLoadingProps {
-  message?: string; // Valbart meddelande att visa under laddningen
-  size?: "small" | "large"; // Storlek på laddningsindikatorn
-  color?: string; // Färg på indikatorn
+  message?: string;
+  size?: "small" | "large";
+  color?: string;
 }
 
 const IsLoading: React.FC<IsLoadingProps> = ({
   message = "Loading...",
   size = "large",
-  color = "#1E90FF", // En snygg blå färg som standard
+  color = "#1E90FF",
 }) => {
-  // Skapa en fade-in-animation för att göra det mer dynamiskt
   const fadeAnim = React.useRef(new Animated.Value(0)).current;
 
   React.useEffect(() => {
     Animated.timing(fadeAnim, {
       toValue: 1,
-      duration: 500, // Fade-in över 0.5 sekunder
+      duration: 500,
       useNativeDriver: true,
     }).start();
   }, [fadeAnim]);
@@ -48,7 +47,7 @@ const styles = StyleSheet.create({
   message: {
     marginTop: 10,
     fontSize: 18,
-    color: "#333", // Mörkgrå text för läsbarhet
+    color: "#333",
     fontWeight: "500",
   },
 });

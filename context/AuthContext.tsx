@@ -6,7 +6,7 @@ import { auth } from "../firebaseConfig";
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
-  setUser: React.Dispatch<React.SetStateAction<User | null>>; // Inkludera setUser
+  setUser: React.Dispatch<React.SetStateAction<User | null>>;
 }
 
 interface AuthProviderProps {
@@ -16,7 +16,7 @@ interface AuthProviderProps {
 export const AuthContext = createContext<AuthContextType>({
   user: null,
   isLoading: true,
-  setUser: () => {}, // Tom funktion som initialt värde för setUser
+  setUser: () => {},
 });
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {

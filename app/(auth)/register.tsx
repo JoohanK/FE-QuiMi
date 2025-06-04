@@ -1,7 +1,7 @@
 import React, { useState, useContext } from "react";
 import { StyleSheet, View } from "react-native";
 import { auth, db } from "../../firebaseConfig";
-import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth"; // Lägg till updateProfile
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { useRouter } from "expo-router";
 import { setDoc, doc } from "firebase/firestore";
 import { AuthContext } from "@/context/AuthContext";

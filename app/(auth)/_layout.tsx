@@ -43,10 +43,10 @@ export default function Layout() {
           },
           tabBarActiveTintColor: "tomato",
           tabBarInactiveTintColor: "gray",
-          tabBarStyle: { height: 100, backgroundColor: "transparent" }, // Gör bakgrunden transparent
+          tabBarStyle: { height: 100, backgroundColor: "transparent" },
           tabBarBackground: () => (
             <LinearGradient
-              colors={["#FFFFE0", "#FFD700"]} // Ljusare gul till mörkare gul
+              colors={["#FFFFE0", "#FFD700"]}
               style={{ flex: 1 }}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}

@@ -10,8 +10,8 @@ import {
 interface ContainerComponentProps {
   children: React.ReactNode;
   style?: ViewStyle;
-  scrollable?: boolean; // Lägg till möjlighet att göra containern scrollbar
-  scrollProps?: ScrollViewProps; // Lägg till möjlighet att skicka scrollview props
+  scrollable?: boolean;
+  scrollProps?: ScrollViewProps;
 }
 
 const ContainerComponent: React.FC<ContainerComponentProps> = ({

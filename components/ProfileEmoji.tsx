@@ -1,4 +1,3 @@
-// ProfileDisplay.tsx
 import React, { useContext } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { AuthContext } from "../context/AuthContext";

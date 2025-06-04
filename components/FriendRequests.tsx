@@ -114,7 +114,6 @@ const FriendRequests = () => {
 
     setupListeners();
 
-    // Cleanup-funktion
     return () => {
       unsubscribeOutgoing();
       unsubscribeIncoming();

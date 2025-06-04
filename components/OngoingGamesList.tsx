@@ -54,7 +54,6 @@ export default function OngoingGamesList() {
     };
 
     const updateGamesList = (newGames: Game[]) => {
-      // Kombinera nya spel med befintliga, ta bort dubbletter baserat på id
       const combinedGames = [
         ...allGames.filter((g) => !newGames.some((ng) => ng.id === g.id)),
         ...newGames,
@@ -64,7 +63,7 @@ export default function OngoingGamesList() {
         const bIsMyTurn = b.turn === currentUser.uid ? 0 : 1;
         return aIsMyTurn - bIsMyTurn;
       });
-      allGames = combinedGames; // Uppdatera allGames för nästa körning
+      allGames = combinedGames;
       setOngoingGames(sortedGames);
     };
 

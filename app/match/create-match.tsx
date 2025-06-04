@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text } from "react-native"; // Removed StyleSheet
+import { View, Text } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import BackButton from "@/components/BackButton";
 import TitleComponent from "@/components/TitleComponent";
