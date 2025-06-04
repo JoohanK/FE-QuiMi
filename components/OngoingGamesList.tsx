@@ -15,7 +15,7 @@ export default function OngoingGamesList() {
   const router = useRouter();
   const currentUser = auth.currentUser;
 
-  console.log("Play page loaded");
+  ("Play page loaded");
 
   useEffect(() => {
     if (!currentUser) return;
@@ -92,7 +92,7 @@ export default function OngoingGamesList() {
   }, [currentUser?.uid]);
 
   const handleResumeGame = (gameId: string) => {
-    console.log("Resuming game with ID:", gameId);
+    "Resuming game with ID:", gameId;
     router.push(`/match/${gameId}`);
   };
 

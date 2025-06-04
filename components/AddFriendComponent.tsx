@@ -20,7 +20,7 @@ export default function AddFriendComponent() {
   const [friendDisplayName, setFriendDisplayName] = useState("");
 
   const handleAddFriend = async () => {
-    console.log("Current user:", auth.currentUser);
+    "Current user:", auth.currentUser;
     if (!auth.currentUser) {
       alert("You must be logged in to add a friend");
       return;
@@ -43,7 +43,7 @@ export default function AddFriendComponent() {
       const friendDoc = querySnapshot.docs[0];
       const friendId = friendDoc.id;
 
-      console.log("Friend ID:", friendId);
+      "Friend ID:", friendId;
 
       if (friendId === auth.currentUser.uid) {
         alert("You can't add yourself as a friend");
@@ -69,7 +69,7 @@ export default function AddFriendComponent() {
         status: "pending",
         createdAt: serverTimestamp(),
       };
-      console.log("Sending friend request with data:", friendRequestData);
+      "Sending friend request with data:", friendRequestData;
 
       await addDoc(friendsRef, friendRequestData);
 

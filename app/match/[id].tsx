@@ -278,7 +278,7 @@ export default function MatchScreen() {
       : roundData.player2Answers || [];
 
     if (currentPlayerAnswers.length >= 3) {
-      console.log("Player has already answered 3 questions, skipping save.");
+      ("Player has already answered 3 questions, skipping save.");
       setIsTransitioning(false);
       return;
     }
@@ -321,7 +321,7 @@ export default function MatchScreen() {
         setShowStartButton(false);
       } else if (bothPlayersDone) {
         if (currentRound >= 3) {
-          console.log("Match completed, currentRound:", currentRound);
+          "Match completed, currentRound:", currentRound;
           await updateDoc(gameRef, {
             matchStatus: "completed",
             completedAt: new Date().toISOString(),
@@ -330,14 +330,12 @@ export default function MatchScreen() {
           const nextRound = currentRound + 1;
           const nextRoundStarter =
             nextRound % 2 === 0 ? gameData.player1Id : gameData.player2Id;
-          console.log(
-            "Both players done, currentRound:",
+          "Both players done, currentRound:",
             currentRound,
             "nextRound:",
             nextRound,
             "nextRoundStarter:",
-            nextRoundStarter
-          );
+            nextRoundStarter;
           await updateDoc(gameRef, {
             turn: nextRoundStarter,
             currentRound: nextRound,
@@ -351,12 +349,10 @@ export default function MatchScreen() {
         }
       } else {
         const nextTurnId = isPlayer1 ? gameData.player2Id : gameData.player1Id;
-        console.log(
-          "Only one player done, nextTurnId:",
+        "Only one player done, nextTurnId:",
           nextTurnId,
           "currentRound:",
-          currentRound
-        );
+          currentRound;
         await updateDoc(gameRef, { turn: nextTurnId });
         setQuestions([]);
         setCurrentQuestionIndex(0);

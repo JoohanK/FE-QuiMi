@@ -14,21 +14,21 @@ export default function Play() {
   const router = useRouter();
   const currentUser = auth.currentUser;
 
-  console.log("Play page loaded");
+  ("Play page loaded");
 
   const toggleModal = () => {
-    console.log("Play button pressed");
+    ("Play button pressed");
     setIsModalVisible(!isModalVisible);
   };
 
   const handleSolo = () => {
-    console.log("Move to Match page (Solo)");
+    ("Move to Match page (Solo)");
     router.push("/match/create-match?mode=solo");
     toggleModal();
   };
 
   const handleChallenge = () => {
-    console.log("Move to Match page (Challenge)");
+    ("Move to Match page (Challenge)");
     router.push("/match/create-match?mode=challenge");
     toggleModal();
   };

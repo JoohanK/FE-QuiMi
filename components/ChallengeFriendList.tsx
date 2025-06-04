@@ -189,7 +189,7 @@ const ChallengeFriendList = () => {
       };
       const newGameDoc = await addDoc(gamesRef, newGame);
 
-      console.log("Game created with ID:", newGameDoc.id);
+      "Game created with ID:", newGameDoc.id;
       router.push(`/match/${newGameDoc.id}`);
     } catch (error) {
       console.error("Error creating game:", error);

@@ -14,7 +14,7 @@ export default function Match() {
     router.push("/menu/play");
   };
 
-  console.log("Match screen");
+  ("Match screen");
 
   return (
     <>
