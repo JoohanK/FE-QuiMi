@@ -488,7 +488,7 @@ export default function MatchScreen() {
                 isRoundStarter && !gameData?.rounds?.[currentRound]?.categoryId
                   ? ("Start round " + (currentRound + 1)).toUpperCase()
                   : (
-                      "Play your turn on round" +
+                      "Play your turn on round " +
                       (currentRound + 1)
                     ).toUpperCase()
               }
@@ -523,11 +523,7 @@ export default function MatchScreen() {
             </View>
           )}
         {isLoading && (
-          <IsLoading
-            message="Fetching questions..."
-            size="large"
-            color="#1E90FF"
-          />
+          <IsLoading message="Loading..." size="large" color="#1E90FF" />
         )}
 
         {showQuestions &&
@@ -609,7 +605,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     alignItems: "center",
-    backgroundColor: "black",
+    backgroundColor: "#FFFFE0",
   },
   card: {
     backgroundColor: "#fff",
