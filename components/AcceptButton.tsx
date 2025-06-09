@@ -2,25 +2,30 @@ import React from "react";
 import { TouchableOpacity, StyleSheet, ViewStyle } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
-interface BackButtonProps {
+interface AcceptButtonProps {
   onPress: () => void;
   style?: ViewStyle;
+  iconSize?: number;
 }
 
-const BackButton: React.FC<BackButtonProps> = ({ onPress, style }) => {
+const AcceptButton: React.FC<AcceptButtonProps> = ({
+  onPress,
+  style,
+  iconSize = 60,
+}) => {
   return (
     <TouchableOpacity style={[styles.button, style]} onPress={onPress}>
-      <Ionicons name="arrow-back" size={50} color="#333" />
+      <Ionicons name="checkmark" size={iconSize} color="#4CAF50" />
     </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
   button: {
-    padding: 10,
-    backgroundColor: "#FFFFE0",
-    margin: -3,
+    borderRadius: 8,
+    margin: 8,
+    overflow: "hidden",
   },
 });
 
-export default BackButton;
+export default AcceptButton;

@@ -13,6 +13,8 @@ import { auth, db } from "../firebaseConfig";
 import { profileFromId } from "@/utils/profileFromId";
 import TitleComponent from "./TitleComponent";
 import ContainerComponent from "./ContainerComponent";
+import DeleteButton from "./DeleteButton";
+import AcceptButton from "./AcceptButton";
 import { UserProfile } from "@/types/types";
 
 interface FriendRequest {
@@ -169,12 +171,12 @@ const FriendRequests = () => {
             </View>
             {!item.isSentByMe && (
               <View style={styles.buttonContainer}>
-                <Button
-                  title="❌"
+                <DeleteButton
+                  style={{ transform: [{ scale: 0.6 }], margin: 0 }}
                   onPress={() => rejectFriendRequest(item.id)}
                 />
-                <Button
-                  title="✅"
+                <AcceptButton
+                  style={{ transform: [{ scale: 0.6 }], margin: 0 }}
                   onPress={() => acceptFriendRequest(item.id)}
                 />
               </View>

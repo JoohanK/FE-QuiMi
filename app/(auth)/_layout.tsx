@@ -41,7 +41,7 @@ export default function Layout() {
 
             return <Ionicons name={iconName} size={size} color={color} />;
           },
-          tabBarActiveTintColor: "tomato",
+          tabBarActiveTintColor: "navy",
           tabBarInactiveTintColor: "gray",
           tabBarStyle: { height: 100, backgroundColor: "transparent" },
           tabBarBackground: () => (
