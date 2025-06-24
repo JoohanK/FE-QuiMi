@@ -10,7 +10,6 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 export default function RootLayout() {
   StatusBar.setBarStyle("dark-content");
-  Appearance.setColorScheme("light");
 
   const { setUser } = useContext(AuthContext);
   const router = useRouter();

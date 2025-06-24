@@ -6,6 +6,7 @@ import {
   StyleSheet,
   Pressable,
   Alert,
+  Platform,
 } from "react-native";
 import {
   collection,
@@ -78,79 +79,141 @@ const FriendList = () => {
   };
 
   const handleChallengeFriend = async (friend: FriendWithProfile) => {
-    Alert.alert("Challenge friend", `${friend.profile?.displayName}?`, [
-      {
-        text: "Cancel",
-      },
-      {
-        text: "Challenge",
-        onPress: async () => {
-          try {
-            if (!auth.currentUser) {
-              console.error("User not authenticated");
-              return;
-            }
+    if (Platform.OS === "web") {
+      try {
+        if (!auth.currentUser) {
+          console.error("User not authenticated");
+          return;
+        }
 
-            const friendUserId =
-              friend.userId1 === auth.currentUser.uid
-                ? friend.userId2
-                : friend.userId1;
+        const friendUserId =
+          friend.userId1 === auth.currentUser.uid
+            ? friend.userId2
+            : friend.userId1;
 
-            if (hasActiveGameWith(friendUserId)) {
-              Alert.alert(
-                "Active Game",
-                `You already have an active game with ${friend.profile?.displayName}.`
-              );
-              return;
-            }
+        if (hasActiveGameWith(friendUserId)) {
+          alert(
+            `You already have an active game with ${friend.profile?.displayName}.`
+          );
+          return;
+        }
 
-            const gamesRef = collection(db, "games");
+        const gamesRef = collection(db, "games");
 
-            const newGame = {
-              player1Id: auth.currentUser.uid,
-              player2Id: friendUserId,
-              rounds: [
-                {
-                  roundNumber: 1,
-                  player1Answers: [],
-                  player2Answers: [],
-                  categoryId: null,
-                },
-                {
-                  roundNumber: 2,
-                  player1Answers: [],
-                  player2Answers: [],
-                  categoryId: null,
-                },
-                {
-                  roundNumber: 3,
-                  player1Answers: [],
-                  player2Answers: [],
-                  categoryId: null,
-                },
-                {
-                  roundNumber: 4,
-                  player1Answers: [],
-                  player2Answers: [],
-                  categoryId: null,
-                },
-              ],
-              turn: auth.currentUser.uid,
-              player1Score: 0,
-              player2Score: 0,
-              matchStatus: "in progress",
-              createdAt: new Date().toISOString(),
-            };
-            const newGameDoc = await addDoc(gamesRef, newGame);
+        const newGame = {
+          player1Id: auth.currentUser.uid,
+          player2Id: friendUserId,
+          rounds: [
+            {
+              roundNumber: 1,
+              player1Answers: [],
+              player2Answers: [],
+              categoryId: null,
+            },
+            {
+              roundNumber: 2,
+              player1Answers: [],
+              player2Answers: [],
+              categoryId: null,
+            },
+            {
+              roundNumber: 3,
+              player1Answers: [],
+              player2Answers: [],
+              categoryId: null,
+            },
+            {
+              roundNumber: 4,
+              player1Answers: [],
+              player2Answers: [],
+              categoryId: null,
+            },
+          ],
+          turn: auth.currentUser.uid,
+          player1Score: 0,
+          player2Score: 0,
+          matchStatus: "in progress",
+          createdAt: new Date().toISOString(),
+        };
+        const newGameDoc = await addDoc(gamesRef, newGame);
 
-            "Game created with ID:", newGameDoc.id;
-            router.push(`/match/${newGameDoc.id}`);
-          } catch (error) {
-            console.error("Error creating game:", error);
-          }
+        router.push(`/match/${newGameDoc.id}`);
+      } catch (error) {
+        console.error("Error creating game:", error);
+      }
+    } else {
+      Alert.alert("Challenge friend", `${friend.profile?.displayName}?`, [
+        {
+          text: "Cancel",
         },
-      },
-    ]);
+        {
+          text: "Challenge",
+          onPress: async () => {
+            try {
+              if (!auth.currentUser) {
+                console.error("User not authenticated");
+                return;
+              }
+
+              const friendUserId =
+                friend.userId1 === auth.currentUser.uid
+                  ? friend.userId2
+                  : friend.userId1;
+
+              if (hasActiveGameWith(friendUserId)) {
+                alert(
+                  `You already have an active game with ${friend.profile?.displayName}.`
+                );
+                return;
+              }
+
+              const gamesRef = collection(db, "games");
+
+              const newGame = {
+                player1Id: auth.currentUser.uid,
+                player2Id: friendUserId,
+                rounds: [
+                  {
+                    roundNumber: 1,
+                    player1Answers: [],
+                    player2Answers: [],
+                    categoryId: null,
+                  },
+                  {
+                    roundNumber: 2,
+                    player1Answers: [],
+                    player2Answers: [],
+                    categoryId: null,
+                  },
+                  {
+                    roundNumber: 3,
+                    player1Answers: [],
+                    player2Answers: [],
+                    categoryId: null,
+                  },
+                  {
+                    roundNumber: 4,
+                    player1Answers: [],
+                    player2Answers: [],
+                    categoryId: null,
+                  },
+                ],
+                turn: auth.currentUser.uid,
+                player1Score: 0,
+                player2Score: 0,
+                matchStatus: "in progress",
+                createdAt: new Date().toISOString(),
+              };
+              const newGameDoc = await addDoc(gamesRef, newGame);
+
+              router.push(`/match/${newGameDoc.id}`);
+            } catch (error) {
+              console.error("Error creating game:", error);
+            }
+          },
+        },
+      ]);
+    }
   };
 
   useEffect(() => {

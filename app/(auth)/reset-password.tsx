@@ -1,5 +1,13 @@
 import React, { useState } from "react";
-import { View, TextInput, Button, Alert, StyleSheet, Text } from "react-native";
+import {
+  View,
+  TextInput,
+  Button,
+  Alert,
+  StyleSheet,
+  Text,
+  Platform,
+} from "react-native";
 import { useRouter } from "expo-router";
 import { sendPasswordResetEmail } from "firebase/auth";
 import { auth } from "../../firebaseConfig";
@@ -19,11 +27,16 @@ export default function ResetPassword() {
     if (!email) {
       Alert.alert("Email required", "Please enter your email address.");
     } else {
-      sendPasswordResetEmail(auth, email);
-      Alert.alert(
-        "Email sent",
-        "Instructions to reset your password has been sent to your email address."
-      );
+      if (Platform.OS === "web") {
+        sendPasswordResetEmail(auth, email);
+        alert("Email sent");
+      } else {
+        sendPasswordResetEmail(auth, email);
+        Alert.alert(
+          "Email sent",
+          "Instructions to reset your password has been sent to your email address."
+        );
+      }
       router.push("/login");
     }
   };

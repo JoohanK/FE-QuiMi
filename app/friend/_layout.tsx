@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Slot, useRouter, useLocalSearchParams } from "expo-router";
-import { View, StyleSheet, Alert } from "react-native";
+import { View, StyleSheet, Alert, Platform } from "react-native";
 import { doc, deleteDoc, getDoc } from "firebase/firestore";
 import { auth, db } from "@/firebaseConfig";
 import HeaderComponent from "@/components/HeaderComponent";
@@ -22,36 +22,43 @@ export default function FriendLayout() {
   };
 
   const handleDeleteFriend = async () => {
-    if (!friendId) {
-      Alert.alert("Error", "No friend selected to delete.");
-      return;
-    }
-
-    Alert.alert(
-      "Confirm Delete",
-      `Are you sure you want to delete this friend?`,
-      [
-        {
-          text: "Cancel",
-          style: "cancel",
-        },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              const friendDocRef = doc(db, "friends", friendId);
-              await deleteDoc(friendDocRef);
-              Alert.alert("Success", "Friend deleted");
-              router.push("/menu/friends");
-            } catch (error) {
-              console.error("Error deleting friend:", error);
-              Alert.alert("Error", "Failed to delete friend.");
-            }
+    if (Platform.OS === "web") {
+      try {
+        const friendDocRef = doc(db, "friends", friendId);
+        await deleteDoc(friendDocRef);
+        alert("Friend deleted");
+        router.push("/menu/friends");
+      } catch (error) {
+        console.error("Error deleting friend:", error);
+        alert("Failed to delete friend.");
+      }
+    } else {
+      Alert.alert(
+        "Confirm Delete",
+        `Are you sure you want to delete this friend?`,
+        [
+          {
+            text: "Cancel",
+            style: "cancel",
           },
-        },
-      ]
-    );
+          {
+            text: "Delete",
+            style: "destructive",
+            onPress: async () => {
+              try {
+                const friendDocRef = doc(db, "friends", friendId);
+                await deleteDoc(friendDocRef);
+                Alert.alert("Success", "Friend deleted");
+                router.push("/menu/friends");
+              } catch (error) {
+                console.error("Error deleting friend:", error);
+                Alert.alert("Error", "Failed to delete friend.");
+              }
+            },
+          },
+        ]
+      );
+    }
   };
 
   return (

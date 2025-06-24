@@ -13,7 +13,7 @@ import {
   query,
   where,
 } from "firebase/firestore";
-import { Alert } from "react-native";
+import { Alert, Platform } from "react-native";
 import ButtonComponent from "@/components/ButtonComponent";
 import ContainerComponent from "../../components/ContainerComponent";
 import InputComponent from "@/components/InputComponent";
@@ -104,31 +104,40 @@ export default function Profile() {
   };
 
   const handleSignOut = async () => {
-    Alert.alert(
-      "Are you sure?",
-      "Do you really want to sign out?",
-      [
-        {
-          text: "No",
-          style: "cancel",
-        },
-        {
-          text: "Yes",
-          onPress: async () => {
-            try {
-              await signOut(auth);
-              setUser(null);
-              router.replace("/login");
-            } catch (error) {
-              console.error("Error signing out:", error);
-            }
+    if (Platform.OS === "web") {
+      try {
+        await signOut(auth);
+        setUser(null);
+        router.replace("/login");
+      } catch (error) {
+        console.error("Error signing out:", error);
+      }
+    } else {
+      Alert.alert(
+        "Are you sure?",
+        "Do you really want to sign out?",
+        [
+          {
+            text: "No",
+            style: "cancel",
           },
-        },
-      ],
-      { cancelable: true }
-    );
+          {
+            text: "Yes",
+            onPress: async () => {
+              try {
+                await signOut(auth);
+                setUser(null);
+                router.replace("/login");
+              } catch (error) {
+                console.error("Error signing out:", error);
+              }
+            },
+          },
+        ],
+        { cancelable: true }
+      );
+    }
   };
-
   if (!user) return null;
 
   return (
